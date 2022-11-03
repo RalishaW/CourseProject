@@ -1,0 +1,77 @@
+---
+title: "Final Project STA130"
+author: "Umi Yamaguchi"
+date: "2022-11-02"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(dplyr)
+library(magrittr)
+library(stringr)
+```
+
+```{r setup, include=FALSE}
+df <- read.csv("STA130_Course_Project.csv")
+
+#Check if there're any Na into the 
+#df %>% summary()
+#There're Na's in Phospho_ATF1 and ATF6 so we will remove from the df
+
+#remove na
+df_na <- df %>% select(-Phospho_ATF1, -ATF6, -drug_id, -timepoint_id)
+
+#change the drugs id 0 as "Vem" and 1 as "Vem+Tram"
+df_case <- df_na  %>% mutate(Drugs = case_when(
+                            Drugs == "Vem" ~ "0",
+                            Drugs == "Vem+Tram" ~ "1",
+                            TRUE ~ "" 
+                            )) 
+
+#Remove all the character inside of Timepoint
+df_case$Timepoint <-gsub("[a-z]","",as.character(df_case$Timepoint))
+#Change the Timepoint into numeric type
+df_case$Timepoint <-as.numeric(df_case$Timepoint)
+
+#Remove all the 'u' or 'M' character 
+df_case$Doses <-gsub("[uM]","",as.character(df_case$Doses)) 
+#Remove excess spaces
+df_case$Doses <-gsub(" ","",as.character(df_case$Doses)) 
+#Exchange + sign to the spaces (this is for split the two values)
+df_case$Doses <-gsub("[+]"," ",as.character(df_case$Doses)) 
+
+#Change the drugs type as numeric data type
+df_case$Drugs <-as.numeric(df_case$Drugs)
+
+#Create the `First digit` and `Second digit` and split it by spaces so one of each will goto the each columns  
+df_case[c('First digit', 'Second digit')] <- str_split_fixed(df_case$Doses, " " , 2)
+
+#Since all the First digit is exist, change it to the numeric data type
+df_case$`First digit` <- as.numeric(df_case$`First digit`)
+
+#Change it to the numeric data type
+df_case$`Second digit` <- as.numeric(df_case$`Second digit`)
+#Since there're NA will occur, change it to 0 
+df_case[is.na(df_case)] = 0
+
+#df_case %>% tail()  #THIS IS FOR CHECKING
+
+#Add the `First digit` and `Second digit` and insert into Doses 
+df_case$Doses <- df_case$`First digit` + df_case$`Second digit` 
+
+#Finally Remove the `First digit` and `Second digit` to ignore
+df_tidy <- df_case %>% select(-`First digit`, -`Second digit`)
+
+#Checking the tail of data frame and summary 
+df_tidy %>% tail()
+df_tidy %>% summary()
+
+#export the csv file of df_tidy
+write.csv(df_tidy,"C:\\Users\\yamaguchiumi\\Desktop\\STA130_Final Project\\Tidy_DF.csv", row.names = FALSE)
+```
+
+``` {r setup, include = FALSE}
+
+```

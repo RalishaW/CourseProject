@@ -1,0 +1,112 @@
+---
+title: "FinalProject_EDA"
+author: "Umi Yamaguchi"
+date: "2022-11-07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+#Setup 
+knitr::opts_chunk$set(echo = TRUE)
+#install.packages("reshape")
+library(tidyverse)
+library(dplyr)
+library(magrittr)
+library(stringr)
+library(ggplot2)
+library(reshape)
+```
+
+
+```{r setup, include=FALSE}
+df <- read.csv("Tidy_DF.csv")
+
+```
+
+```{r}
+
+df_0.5_d0 <- df %>% filter(df$Timepoint == 0.5, df$Drugs == 0)
+df_24_d0 <- df %>% filter(df$Timepoint == 24, df$Drugs == 0)
+
+
+```
+
+```{r}
+
+summary(df_0.5_d0)
+
+
+MiTFg_Median_0.5 <- median(df_0.5_d0$MiTFg, na.rm = FALSE) 
+NGFR_Median_0.5 <-median(df_0.5_d0$NGFR, na.rm = FALSE)
+Sox10_Median_0.5 <-median(df_0.5_d0$Sox10, na.rm = FALSE)
+AXL_Median_0.5 <-median(df_0.5_d0$AXL, na.rm = FALSE)
+
+
+#Phospho_c_Fos_Median_0.5 <- median(df_0.5_d0$Phospho_c_Fos, na.rm = FALSE)
+
+#df_0.5_d0 <- df_0.5_d0 %>% mutate(Phospho_c_Fos_Relative = ifelse(Phospho_c_Fos > Phospho_c_Fos_Median_0.5,1,0))
+
+
+
+```
+
+
+```{r setup}
+
+library(rpart)
+#install.packages("partykit")
+library(partykit)
+library(rpart.plot)
+
+```
+
+
+```{r}
+#install necessary libraries
+#install.packages('ggplot2')
+#install.packages('GGally')
+
+#load libraries
+library(ggplot2)
+library(GGally)
+
+
+#create pairs plot 
+
+df <- df_0.5_d0 %>% select(ATF4,MiTFg,AXL, Sox10, NGFR)
+ggpairs(df)
+
+pairs(df_0.5_d0[,2:8], pch = 10)
+
+example0 <- rpart(ATF4 ~ MiTFg + Sox10 + AXL + NGFR, data = df_24_d0)
+
+
+plot(as.party(example0), type="simple", gp=gpar(cex=0.4))
+
+#example1 <- rpart(ATF4 ~ MiTFg + Sox10 + AXL + NGFR, data = df_24_d0 )
+
+#plotcp(example0)
+#printcp(example0)
+
+#par(cex = 3)
+#prp(example0)
+#prp(example1)
+#rpart.plot(example0)
+```
+
+```{r}
+#install.packages('caret')
+#install.packages('InformationValue')
+#install.packages('ISLR')
+library(caret)
+library(InformationValue)
+library(ISLR)
+
+ATF4_preds <- predict(example0, newdata = df_0.5_d0)  
+
+
+confusionMatrix(factor(ATF4_preds), factor(df_0.5_d0$ATF4))
+```
+
+
+

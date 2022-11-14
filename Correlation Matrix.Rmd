@@ -1,0 +1,39 @@
+---
+title: "Final Project STA130"
+author: "Ralisha Woodhouse"
+date: "2022-11-14"
+output:
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+df_tidy<-read_csv("Tidy_DF.csv")
+glimpse(df_tidy)
+```
+
+```{r, fig.width=21, fig.height=21}
+df_tidy %>% select(-...1) %>% 
+cor() %>% as_tibble(rownames="rowname") %>%
+pivot_longer(cols=!rowname,
+names_to="Variable 1",
+values_to="Correlation") %>%
+rename("Variable 2"=rowname) %>%
+ggplot(aes(x=`Variable 1`, y=`Variable 2`,
+fill=Correlation,
+label=round(Correlation,2))) +
+geom_tile() + geom_text(color="white") + 
+theme(axis.text.x = element_text(angle = 45, hjust=1), axis.text = element_text(size = 15))
+```
+```{r, fig.width=21, fig.height=21}
+#This is just another method for doing the correlation matrix first --> install.packages("corrplot")
+library(corrplot)
+Corr<-cor(df_tidy)
+corrplot(Corr,order="hclust", method="number")
+#This one is nicer because it orders the correlations (the positive correlations (blue) are top left).
+```
+

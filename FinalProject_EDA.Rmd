@@ -26,20 +26,79 @@ df <- read.csv("Tidy_DF.csv")
 ```{r}
 
 df_0.5_d0 <- df %>% filter(df$Timepoint == 0.5, df$Drugs == 0)
-df_24_d0 <- df %>% filter(df$Timepoint == 24, df$Drugs == 0)
+df_0.5_d1 <- df %>% filter(df$Timepoint == 0.5, df$Drugs == 1)
+
+
+df_0.5 <- df %>% filter(df$Timepoint == 0.5)
+
+df_15 <- df %>% filter(df$Timepoint == 15)
+
+df_24 <- df %>% filter(df$Timepoint == 24)
 
 
 ```
 
 ```{r}
 
-summary(df_0.5_d0)
+
+# No need for now
+
+# MiTFg_Median_0.5 <- median(df_0.5_d0$MiTFg, na.rm = FALSE) 
+# NGFR_Median_0.5 <-median(df_0.5_d0$NGFR, na.rm = FALSE)
+# Sox10_Median_0.5 <-median(df_0.5_d0$Sox10, na.rm = FALSE)
+# AXL_Median_0.5 <-median(df_0.5_d0$AXL, na.rm = FALSE)
 
 
-MiTFg_Median_0.5 <- median(df_0.5_d0$MiTFg, na.rm = FALSE) 
-NGFR_Median_0.5 <-median(df_0.5_d0$NGFR, na.rm = FALSE)
-Sox10_Median_0.5 <-median(df_0.5_d0$Sox10, na.rm = FALSE)
-AXL_Median_0.5 <-median(df_0.5_d0$AXL, na.rm = FALSE)
+
+
+library(dplyr)
+
+################
+# ---- 0.5h ---- drug 0
+
+# df_0.5_d0 <- df_0.5_d0 %>% mutate(MiTFg_Condition = case_when(MiTFg < median(MiTFg,na.rm = FALSE) ~ "High", MiTFg >= median(MiTFg, na.rm = FALSE) ~ "Low"))
+# df_0.5_d0 <- df_0.5_d0 %>% mutate(Sox10_Condition = case_when(Sox10 < median(Sox10,na.rm = FALSE) ~ "High", Sox10 >= median(Sox10, na.rm = FALSE) ~ "Low"))
+# df_0.5_d0 <- df_0.5_d0 %>% mutate(NGFR_Condition = case_when(NGFR < median(NGFR,na.rm = FALSE) ~ "High", NGFR >= median(NGFR, na.rm = FALSE) ~ "Low"))
+# df_0.5_d0 <- df_0.5_d0 %>% mutate(AXL_Condition = case_when(AXL < median(AXL,na.rm = FALSE) ~ "High", AXL >= median(AXL, na.rm = FALSE) ~ "Low"))
+# 
+
+################
+# ---- 0.5h ---- drug 1
+
+# 
+# df_0.5_d1 <- df_0.5_d1 %>% mutate(MiTFg_Condition = case_when(MiTFg < median(MiTFg,na.rm = FALSE) ~ "High", MiTFg >= median(MiTFg, na.rm = FALSE) ~ "Low"))
+# df_0.5_d1 <- df_0.5_d1 %>% mutate(Sox10_Condition = case_when(Sox10 < median(Sox10,na.rm = FALSE) ~ "High", Sox10 >= median(Sox10, na.rm = FALSE) ~ "Low"))
+# df_0.5_d1 <- df_0.5_d1 %>% mutate(NGFR_Condition = case_when(NGFR < median(NGFR,na.rm = FALSE) ~ "High", NGFR >= median(NGFR, na.rm = FALSE) ~ "Low"))
+# df_0.5_d1 <- df_0.5_d1 %>% mutate(AXL_Condition = case_when(AXL < median(AXL,na.rm = FALSE) ~ "High", AXL >= median(AXL, na.rm = FALSE) ~ "Low"))
+
+################
+# ---- 0.5h ---- drug 1 and 0
+
+# df_0.5 <- df_0.5 %>% mutate(MiTFg_Condition = case_when(MiTFg < median(MiTFg,na.rm = FALSE) ~ "High", MiTFg >= median(MiTFg, na.rm = FALSE) ~ "Low"))
+# df_0.5 <- df_0.5 %>% mutate(Sox10_Condition = case_when(Sox10 < median(Sox10,na.rm = FALSE) ~ "High", Sox10 >= median(Sox10, na.rm = FALSE) ~ "Low"))
+# df_0.5 <- df_0.5 %>% mutate(NGFR_Condition = case_when(NGFR < median(NGFR,na.rm = FALSE) ~ "High", NGFR >= median(NGFR, na.rm = FALSE) ~ "Low"))
+# df_0.5 <- df_0.5 %>% mutate(AXL_Condition = case_when(AXL < median(AXL,na.rm = FALSE) ~ "High", AXL >= median(AXL, na.rm = FALSE) ~ "Low"))
+
+
+################
+# ---- 15h ---- drug 0 and 1 
+
+# df_15 <- df_15 %>% mutate(MiTFg_Condition = case_when(MiTFg < median(MiTFg,na.rm = FALSE) ~ "High", MiTFg >= median(MiTFg, na.rm = FALSE) ~ "Low"))
+# df_15 <- df_15 %>% mutate(Sox10_Condition = case_when(Sox10 < median(Sox10,na.rm = FALSE) ~ "High", Sox10 >= median(Sox10, na.rm = FALSE) ~ "Low"))
+# df_15 <- df_15 %>% mutate(NGFR_Condition = case_when(NGFR < median(NGFR,na.rm = FALSE) ~ "High", NGFR >= median(NGFR, na.rm = FALSE) ~ "Low"))
+# df_15 <- df_15 %>% mutate(AXL_Condition = case_when(AXL < median(AXL,na.rm = FALSE) ~ "High", AXL >= median(AXL, na.rm = FALSE) ~ "Low"))
+
+
+################
+# ---- 24h ---- drug 0 and 1 
+
+df_24 <- df_24 %>% mutate(MiTFg_Condition = case_when(MiTFg < median(MiTFg,na.rm = FALSE) ~ "High", MiTFg >= median(MiTFg, na.rm = FALSE) ~ "Low"))
+df_24 <- df_24 %>% mutate(Sox10_Condition = case_when(Sox10 < median(Sox10,na.rm = FALSE) ~ "High", Sox10 >= median(Sox10, na.rm = FALSE) ~ "Low"))
+df_24 <- df_24 %>% mutate(NGFR_Condition = case_when(NGFR < median(NGFR,na.rm = FALSE) ~ "High", NGFR >= median(NGFR, na.rm = FALSE) ~ "Low"))
+df_24 <- df_24 %>% mutate(AXL_Condition = case_when(AXL < median(AXL,na.rm = FALSE) ~ "High", AXL >= median(AXL, na.rm = FALSE) ~ "Low"))
+
+
+summary(df_24)
 
 
 #Phospho_c_Fos_Median_0.5 <- median(df_0.5_d0$Phospho_c_Fos, na.rm = FALSE)
@@ -73,26 +132,85 @@ library(GGally)
 
 #create pairs plot 
 
-df <- df_0.5_d0 %>% select(ATF4,MiTFg,AXL, Sox10, NGFR)
-ggpairs(df)
+#df <- df_0.5_d0 %>% select(ATF4,MiTFg,AXL, Sox10, NGFR)
+#ggpairs(df)
+#pairs(df_0.5_d0[,2:8], pch = 10)
 
-pairs(df_0.5_d0[,2:8], pch = 10)
+############################################ 
+# ---- 0.5h ----
 
-example0 <- rpart(ATF4 ~ MiTFg + Sox10 + AXL + NGFR, data = df_24_d0)
+#########example 0 
 
+#example0 <- rpart( Phospho_ATF2 ~ MiTFg_Condition + Sox10_Condition + NGFR_Condition + AXL_Condition, data = df_0.5_d0, cp = 0.001)
 
-plot(as.party(example0), type="simple", gp=gpar(cex=0.4))
-
-#example1 <- rpart(ATF4 ~ MiTFg + Sox10 + AXL + NGFR, data = df_24_d0 )
+#plot(as.party(example0), type="simple", gp=gpar(cex=0.2))
 
 #plotcp(example0)
 #printcp(example0)
-
-#par(cex = 3)
 #prp(example0)
-#prp(example1)
 #rpart.plot(example0)
+
+
+########example 1
+
+# example1 <- rpart( NF_kappaB ~ MiTFg_Condition + Sox10_Condition + NGFR_Condition + AXL_Condition, data = df_0.5_d1, cp = 0.001)
+# 
+# plot(as.party(example1), type="simple", gp=gpar(cex=0.2))
+# 
+# plotcp(example1)
+# printcp(example1)
+# prp(example1)
+# rpart.plot(example1)
+
+
+#########example 2 
+
+# example2 <- rpart( JunB ~ MiTFg_Condition + Sox10_Condition + NGFR_Condition + AXL_Condition, data = df_0.5, cp = 0.001)
+# 
+# plot(as.party(example2), type="simple", gp=gpar(cex=0.2))
+# 
+# plotcp(example2)
+# printcp(example2)
+# prp(example2)
+# rpart.plot(example2)
+
 ```
+
+```{r}
+
+############################################ 
+# ---- 15h ----
+
+######### con.15 
+
+# con.15 <- rpart( Phospho_p38 ~ MiTFg_Condition + Sox10_Condition + NGFR_Condition + AXL_Condition, data = df_15, cp = 0.001)
+# 
+# plot(as.party(con.15), type="simple", gp=gpar(cex=0.2))
+# 
+# plotcp(con.15)
+# printcp(con.15)
+# prp(con.15)
+# rpart.plot(con.15)
+
+
+############################################ 
+# ---- 24h ----
+
+######### con.24 
+
+con.24 <- rpart( Phospho_p38 ~ MiTFg_Condition + Sox10_Condition + NGFR_Condition + AXL_Condition, data = df_24, cp = 0.001)
+
+plot(as.party(con.24), type="simple", gp=gpar(cex=0.2))
+
+plotcp(con.24)
+printcp(con.24)
+prp(con.24)
+rpart.plot(con.24)
+
+
+```
+
+
 
 ```{r}
 #install.packages('caret')

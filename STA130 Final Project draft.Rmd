@@ -1,0 +1,115 @@
+---
+title: "Final Project STA130"
+author: "Umi Yamaguchi"
+date: "2022-11-02"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(dplyr)
+library(magrittr)
+library(stringr)
+```
+
+```{r setup, include=FALSE}
+df <- read.csv("C:\\Users\\leonh\\Downloads\\STA130_Course_project.csv")
+
+#Check if there're any Na into the 
+#df %>% summary()
+#There're Na's in Phospho_ATF1 and ATF6 so we will remove from the df
+
+#remove na
+df_na <- df %>% select(-Phospho_ATF1, -ATF6, -drug_id, -timepoint_id)
+
+#change the drugs id 0 as "Vem" and 1 as "Vem+Tram"
+df_case <- df_na  %>% mutate(Drugs = case_when(
+                            Drugs == "Vem" ~ "0",
+                            Drugs == "Vem+Tram" ~ "1",
+                            TRUE ~ "" 
+                            )) 
+
+#Remove all the character inside of Timepoint
+df_case$Timepoint <-gsub("[a-z]","",as.character(df_case$Timepoint))
+#Change the Timepoint into numeric type
+df_case$Timepoint <-as.numeric(df_case$Timepoint)
+
+#Remove all the 'u' or 'M' character 
+df_case$Doses <-gsub("[uM]","",as.character(df_case$Doses)) 
+#Remove excess spaces
+df_case$Doses <-gsub(" ","",as.character(df_case$Doses)) 
+#Exchange + sign to the spaces (this is for split the two values)
+df_case$Doses <-gsub("[+]"," ",as.character(df_case$Doses)) 
+
+#Change the drugs type as numeric data type
+df_case$Drugs <-as.numeric(df_case$Drugs)
+
+#Create the `First digit` and `Second digit` and split it by spaces so one of each will goto the each columns  
+df_case[c('First digit', 'Second digit')] <- str_split_fixed(df_case$Doses, " " , 2)
+
+#Since all the First digit is exist, change it to the numeric data type
+df_case$`First digit` <- as.numeric(df_case$`First digit`)
+
+#Change it to the numeric data type
+df_case$`Second digit` <- as.numeric(df_case$`Second digit`)
+#Since there're NA will occur, change it to 0 
+df_case[is.na(df_case)] = 0
+
+#df_case %>% tail()  #THIS IS FOR CHECKING
+
+#Add the `First digit` and `Second digit` and insert into Doses 
+df_case$Doses <- df_case$`First digit` + df_case$`Second digit` 
+
+#Finally Remove the `First digit` and `Second digit` to ignore
+df_tidy <- df_case %>% select(-`First digit`, -`Second digit`)
+
+#Checking the tail of data frame and summary 
+df_tidy %>% tail()
+df_tidy %>% summary()
+
+#export the csv file of df_tidy
+write.csv(df_tidy,"C:\\Users\\yamaguchiumi\\Desktop\\STA130_Final Project\\Tidy_DF.csv", row.names = FALSE)
+```
+
+
+``` {r setup, include = FALSE}
+q1data <- df_tidy
+q1data <- q1data %>% mutate(MiTFg_Condition = case_when(MiTFg >= median(MiTFg,na.rm = FALSE) ~ "High", MiTFg < median(MiTFg, na.rm = FALSE) ~ "Low"))
+q1data <- q1data %>% mutate(Sox10_Condition = case_when(Sox10 >= median(Sox10,na.rm = FALSE) ~ "High", Sox10 < median(Sox10, na.rm = FALSE) ~ "Low"))
+q1data <- q1data %>% mutate(NGFR_Condition = case_when(NGFR >= median(NGFR,na.rm = FALSE) ~ "High", NGFR < median(NGFR, na.rm = FALSE) ~ "Low"))
+q1data <- q1data %>% mutate(AXL_Condition = case_when(AXL >= median(AXL,na.rm = FALSE) ~ "High", AXL < median(AXL, na.rm = FALSE) ~ "Low"))
+
+q1data <- q1data %>% filter(Timepoint == 0.5 | Timepoint == 15) %>% filter(Drugs==0)
+q1data <- q1data %>% mutate(TimeID = case_when(Timepoint==0.5 ~ 1, Timepoint!=0.5 ~ 0))
+q1data %>% filter(MiTFg_Condition == "High" & NGFR_Condition == "High" & Sox10_Condition == "Low" & AXL_Condition == "Low")  
+
+
+test_stat1 <- q1data %>% group_by(TimeID) %>% summarise(medians1 = median(Phospho_ATF2),.groups = "drop") %>% summarise(value = diff(medians1))
+
+set.seed(188)
+repetitions <-1000;
+simulated_values1 <- rep(NA, repetitions)
+for (i in 1:repetitions) {
+  simdata1 <- q1data %>% mutate(TimeID = sample(TimeID))
+  simvalue1 <- simdata1 %>% group_by(TimeID) %>% summarise(medians1 = median(Phospho_ATF2),.groups = "drop") %>% summarise(value = diff(medians1))
+  simulated_values1[i] <- as.numeric(simvalue1)
+}
+sim1 <- tibble(median_diff1 = simulated_values1)
+extreme1 <- sim1 %>% filter(abs(median_diff1) >= abs(test_stat1)) %>% summarise(n())
+p_value1 <- as.numeric(extreme1/repetitions)
+p_value1
+
+test_stat2 <- q1data %>% group_by(TimeID) %>% summarise(medians2 = median(Phospho_p38),.groups = "drop") %>% summarise(value = diff(medians2))
+
+simulated_values2 <- rep(NA, repetitions)
+for (i in 1:repetitions) {
+  simdata2 <- q1data %>% mutate(TimeID = sample(TimeID))
+  simvalue2 <- simdata2 %>% group_by(TimeID) %>% summarise(medians2 = median(Phospho_p38),.groups = "drop") %>% summarise(value = diff(medians2))
+  simulated_values2[i] <- as.numeric(simvalue2)
+}
+sim2 <- tibble(median_diff2 = simulated_values2)
+extreme2 <- sim2 %>% filter(abs(median_diff2) >= abs(test_stat2)) %>% summarise(n())
+p_value2 <- as.numeric(extreme2/repetitions)
+p_value2
+```

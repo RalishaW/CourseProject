@@ -1,0 +1,170 @@
+---
+title: "Effectivness of skin cancer drugs by analyzing meta data"
+subtitle: "STA130 - Final Project"
+author: "Umi Yamaguchi, Ralisha Woodhouse, Yifei Hong"
+date: December 8, 2022
+output: 
+  beamer_presentation:
+    theme: "Szeged"
+    colortheme: "beaver"
+    fonttheme: "professionalfonts"
+    slide_level: 2
+classoption: "aspectratio=169"
+fontsize: 8pt
+urlcolor: cyan
+---
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+## Introduction
+
+\Large 
+
+### Goals And Motivation 
+
+\vspace{.5cm}
+1.
+
+\vspace{.5cm}
+2.
+
+\vspace{.5cm}
+3.
+
+### Population and Samples
+
+```{r, size= 0.5} 
+"Hello, World."
+```
+* Samples
+
+
+## Data Wrangling 
+
+\large
+
+### Setup
+* Population
+* Samples
+* Population
+* Samples
+
+## Checking Outliers and Data Sets
+
+\large
+
+*post the heat maps/box plots etc...
+
+## Two Hypothesis Teting 
+
+\large
+
+### Questions: 
+
+\vspace{.5cm}
+* 
+
+### Methods: 
+
+\vspace{.5cm}
+1.
+
+
+## Results and Prediction (Two Hypothesis Testing)
+
+\large
+
+### Results
+*Talk about the results
+*
+
+
+## Linear Regressions 
+
+\large
+
+### Questions: 
+
+\vspace{.5cm}
+* 
+
+### Methods: 
+
+\vspace{.5cm}
+1.
+
+
+## Results and Prediction (Linear Regressions)
+
+\large
+
+### Results
+*Talk about the results
+*
+
+## Classification Trees 
+
+\large
+
+### Questions: 
+
+\vspace{.5cm}
+* 
+
+### Methods: 
+
+\vspace{.5cm}
+1.
+
+
+## Results and Prediction (Classification Trees)
+
+\large
+
+### Results
+*Talk about the results
+*
+
+## Overall Prediction and Results
+
+### Prediction
+1.
+2.
+3.
+
+### Results
+*
+*
+*
+
+## Limitation
+*
+*
+*
+*
+*
+
+## Conclusion with Future Perspective
+
+### Conclusions
+*
+*
+*
+
+### How this results will help?
+1.
+2.
+3.
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,574 @@
+---
+title: "Data-driven identification of transcription factor networks \\linebreak overtime
+  in indicating a shifted cellular homeostasis"
+author: "Umi Yamaguchi, Ralisha Woodhouse, Yifei Hong"
+date: "December 8, 2022"
+output:
+  beamer_presentation:
+    keep_tex: yes
+    theme: Szeged
+    colortheme: dolphin
+    fonttheme: professionalfonts
+    slide_level: 2
+  slidy_presentation: default
+institute: University of Toronto
+subtitle: "STA130 - Final Project"
+classoption: aspectratio=169
+fontsize: 8pt
+urlcolor: cyan
+---
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(dplyr)
+library(magrittr)
+library(stringr)
+library(ggplot2)
+library(reshape)
+library(corrplot)
+library(rpart)
+library(partykit)
+library(rpart.plot)
+library(GGally)
+library(pROC)
+library("stats")
+library("datasets")
+library(caret)
+library(InformationValue)
+library(ISLR)
+
+```
+
+## Introduction
+
+\Large 
+
+### Goals And Motivation 
+
+\vspace{.5cm}
+
+* Decrease or reduce the growth and expansion of malignant cells 
+
+\vspace{.5cm}
+
+* Controlling the transcription factor network using the data set given [1] 
+
+\vspace{.5cm}
+
+* Identify movement from deleterious to healthy phenotype overtime 
+
+### Research Questions & Categories of Analysis
+
+
+\normalsize 
+
+\vspace{.5cm}
+
+1.Do protein levels in experimental condition 'X' change over time 't'? -> Two Sample Hypothesis Testing
+
+\vspace{.2cm}
+
+2.Can we predict cellular phenotype outcomes 'Y' values from transcription factors (TF)? -> Linear Regression
+
+\vspace{.2cm}
+
+3.At time 't' in experimental condition, what TF are most predictive of cellular values/states ? -> Classification Trees 
+
+##################################
+
+## Data Set & Data Wrangling 
+
+\large
+
+### Data Set
+* Overall 22 Levels of Transcription Factors (AP-1)   
+* 4 Phenotype Indicators (MiTFg, Sox10, NGFR, AXL)
+* Others: Time point, Drugs type, Dose id, Dosage, Repetition 
+
+```{r, include=FALSE}
+#insert csv file into 'df' 
+df <- read.csv("STA130_Course_Project.csv")
+
+#Remove all na's
+df_na <- df %>% select(-Phospho_ATF1, -ATF6, -drug_id, -timepoint_id)
+
+####### Drugs column 
+
+#Mutate the Drugs cases as 0 (Vem) and 1 (Vem+Tram) 
+df_case <- df_na  %>% mutate(Drugs = case_when(
+                            Drugs == "Vem" ~ "0",
+                            Drugs == "Vem+Tram" ~ "1",
+                            TRUE ~ "" 
+                            ))
+df_case$Drugs <-as.numeric(df_case$Drugs)
+
+####### Timepoint column
+
+#Remove all the character inside of Timepoint
+df_case$Timepoint <-gsub("[a-z]","",as.character(df_case$Timepoint))
+
+#Change the Timepoint into numeric type
+df_case$Timepoint <-as.numeric(df_case$Timepoint)
+
+####### Doses column
+
+#Remove all the 'u' or 'M' character (unit of amount) 
+df_case$Doses <-gsub("[uM]","",as.character(df_case$Doses)) 
+
+#Remove excess spaces
+df_case$Doses <-gsub(" ","",as.character(df_case$Doses)) 
+#Exchange + sign to the spaces (this is for split the two values)
+
+df_case$Doses <-gsub("[+]"," ",as.character(df_case$Doses)) 
+
+#Create the `First digit` and `Second digit` and split it by spaces so one of each will goto the each columns  
+df_case[c('First digit', 'Second digit')] <- str_split_fixed(df_case$Doses, " " , 2)
+
+#Since all the First digit is exist, change it to the numeric data type
+df_case$`First digit` <- as.numeric(df_case$`First digit`)
+
+#Change it to the numeric data type
+df_case$`Second digit` <- as.numeric(df_case$`Second digit`)
+#Since there're NA will occur, change it to 0 
+df_case[is.na(df_case)] = 0
+
+#Add the `First digit` and `Second digit` and insert into Doses 
+df_case$Doses <- df_case$`First digit` + df_case$`Second digit` 
+
+#Finally Remove the `First digit` and `Second digit` to ignore
+df_tidy <- df_case %>% select(-`First digit`, -`Second digit`)
+
+#####################################
+
+#export the csv file of df_tidy
+write.csv(df_tidy,"Directory\\Tidy_DF.csv", row.names = FALSE)
+
+
+```
+
+```{r echo = FALSE, results = 'asis'}
+library(knitr)
+kable(df_tidy[1:5, 24:30 ], caption = "Data Wrangling")
+```
+\normalsize
+* Total Observations: 540792 (exclude NA's) 
+* Time point (exclude any characters)
+* Doses [exclude any unit ('uM' and '+' sign)] 
+* Change the name of drugs to 0 and 1. 0 for 'Vem' and 1 for 'Vem + Tram' 
+
+
+##################################
+
+## Checking Outliers and Data Sets
+
+\large
+```{r, include = FALSE}
+
+Corr<-cor(df_tidy)
+```
+
+::: columns 
+
+:::: column 
+
+\vspace{.2cm}
+
+Correlation Overview 
+
+```{r, echo=FALSE, fig.width=10, fig.height=10}
+corrplot(Corr,order="hclust", method="color")
+```
+::::
+
+:::: column
+
+### What we can observe 
+
+*correlation 
+*make some answers 
+*
+::::
+
+:::
+
+
+
+
+##################################
+
+## Classification Trees 
+
+\large
+
+### Questions: 
+
+\vspace{.2cm}
+* At time 't' in experimental condition, what TF are most predictive of cellular values/states ?
+
+### Methods: 
+
+::: columns
+
+:::: column 
+\vspace{.3cm}
+\small
+
+1. Separate the data frame for time point 0.5 and 15 hours 
+
+\vspace{.1cm}
+
+2. Separate the time point into drugs 0 and 1
+
+\vspace{.1cm}
+
+3. Each drug 0 and 1 creates the new columns for 4 phenotype indicators conditions (High/Low)
+
+\vspace{.1cm}
+
+4. Check all phenotypes of 0.5h drugs 0 and 1 to identify any condition matches 
+::::
+
+:::: column
+
+```{r, include=FALSE}
+
+
+df_0.5_d0 <- df_tidy %>% filter(df_tidy$Timepoint == 0.5, df_tidy$Drugs == 0)
+df_0.5_d1 <- df_tidy %>% filter(df_tidy$Timepoint == 0.5, df_tidy$Drugs == 1)
+
+df_15_d0 <- df_tidy %>% filter(df_tidy$Timepoint == 15, df_tidy$Drugs == 0)
+df_15_d1 <- df_tidy %>% filter(df_tidy$Timepoint == 15, df_tidy$Drugs == 1)
+
+
+################
+# ---- 0.5h ---- drug 0
+
+ df_0.5_d0 <- df_0.5_d0 %>% mutate(MiTFg_Condition = case_when(MiTFg >= median(MiTFg,na.rm = FALSE) ~ "High", MiTFg < median(MiTFg, na.rm = FALSE) ~ "Low"))
+ df_0.5_d0 <- df_0.5_d0 %>% mutate(Sox10_Condition = case_when(Sox10 >= median(Sox10,na.rm = FALSE) ~ "High", Sox10 < median(Sox10, na.rm = FALSE) ~ "Low"))
+ df_0.5_d0 <- df_0.5_d0 %>% mutate(NGFR_Condition = case_when(NGFR >= median(NGFR,na.rm = FALSE) ~ "High", NGFR < median(NGFR, na.rm = FALSE) ~ "Low"))
+ df_0.5_d0 <- df_0.5_d0 %>% mutate(AXL_Condition = case_when(AXL >= median(AXL,na.rm = FALSE) ~ "High", AXL < median(AXL, na.rm = FALSE) ~ "Low"))
+#
+
+################
+# ---- 0.5h ---- drug 1
+
+#
+ df_0.5_d1 <- df_0.5_d1 %>% mutate(MiTFg_Condition = case_when(MiTFg >= median(MiTFg,na.rm = FALSE) ~ "High", MiTFg < median(MiTFg, na.rm = FALSE) ~ "Low"))
+ df_0.5_d1 <- df_0.5_d1 %>% mutate(Sox10_Condition = case_when(Sox10 >= median(Sox10,na.rm = FALSE) ~ "High", Sox10 < median(Sox10, na.rm = FALSE) ~ "Low"))
+ df_0.5_d1 <- df_0.5_d1 %>% mutate(NGFR_Condition = case_when(NGFR >= median(NGFR,na.rm = FALSE) ~ "High", NGFR < median(NGFR, na.rm = FALSE) ~ "Low"))
+ df_0.5_d1 <- df_0.5_d1 %>% mutate(AXL_Condition = case_when(AXL >= median(AXL,na.rm = FALSE) ~ "High", AXL < median(AXL, na.rm = FALSE) ~ "Low"))
+
+################
+# ---- 15h ---- drug 0
+
+ df_15_d0 <- df_15_d0 %>% mutate(MiTFg_Condition = case_when(MiTFg >= median(MiTFg,na.rm = FALSE) ~ "High", MiTFg < median(MiTFg, na.rm = FALSE) ~ "Low"))
+ df_15_d0 <- df_15_d0 %>% mutate(Sox10_Condition = case_when(Sox10 >= median(Sox10,na.rm = FALSE) ~ "High", Sox10 < median(Sox10, na.rm = FALSE) ~ "Low"))
+ df_15_d0 <- df_15_d0 %>% mutate(NGFR_Condition = case_when(NGFR >= median(NGFR,na.rm = FALSE) ~ "High", NGFR < median(NGFR, na.rm = FALSE) ~ "Low"))
+ df_15_d0 <- df_15_d0 %>% mutate(AXL_Condition = case_when(AXL >= median(AXL,na.rm = FALSE) ~ "High", AXL < median(AXL, na.rm = FALSE) ~ "Low"))
+#
+
+################
+# ---- 15h ---- drug 1
+
+#
+ df_15_d1 <- df_15_d1 %>% mutate(MiTFg_Condition = case_when(MiTFg >= median(MiTFg,na.rm = FALSE) ~ "High", MiTFg < median(MiTFg, na.rm = FALSE) ~ "Low"))
+ df_15_d1 <- df_15_d1 %>% mutate(Sox10_Condition = case_when(Sox10 >= median(Sox10,na.rm = FALSE) ~ "High", Sox10 < median(Sox10, na.rm = FALSE) ~ "Low"))
+ df_15_d1 <- df_15_d1 %>% mutate(NGFR_Condition = case_when(NGFR >= median(NGFR,na.rm = FALSE) ~ "High", NGFR < median(NGFR, na.rm = FALSE) ~ "Low"))
+ df_15_d1 <- df_15_d1 %>% mutate(AXL_Condition = case_when(AXL >= median(AXL,na.rm = FALSE) ~ "High", AXL < median(AXL, na.rm = FALSE) ~ "Low"))
+
+```
+
+
+```{r, echo = FALSE}
+
+
+example0 <- rpart( Phospho_p38 ~ MiTFg_Condition + Sox10_Condition + NGFR_Condition + AXL_Condition, data = df_0.5_d0, cp = 0.001)
+
+plotcp(example0)
+#printcp(example0)
+#prp(example0)
+#rpart.plot(example0)
+```
+::::
+
+:::
+
+##################################
+
+## Classification Trees example : Phospho_p38
+
+```{r, echo=FALSE,fig.align='center'}
+
+plot(as.party(example0), type="simple", gp=gpar(cex=0.4))
+
+```
+
+
+##################################
+
+## Results (Classification Trees)
+
+\large
+
+::: columns 
+
+:::: {.column width="70%"} 
+
+\vspace{.4cm}
+*
+Time point = 0.5h
+Drug = 0
+
+|AP-1| Error|Condition|#Observations|
+|-----|--------|-------|-------|
+|Phospho_ATF2|26.3|Undifferentiated|2140|
+|Phospho_p38|6.9|Melanocytic|718|
+|NF_kappaB|5.7|Melanocytic|718|
+
+\vspace{.4cm}
+*
+Time point = 0.5h
+Drug = 1
+
+|AP-1| Error|Condition|#Observations|
+|-----|--------|-------|-------|
+|Phospho_ATF2|17.2|Neural crest-like|1340|
+|Phospho_p38|19.5|Transitory|2065|
+|Phospho_Fra1|24.7|Melanocytic|793|
+|NF_kappaB|7.4|Melanocytic|793|
+
+
+::::
+
+:::: {.column width="30%"} 
+
+\vspace{1.0cm}
+
+### What the results tell us: 
+
+\normalsize
+
+\vspace{.4cm}
+
+* Initial Condition for each Drug
+
+\vspace{.4cm}
+
+* High accuracy becomes Melanocytic States
+
+\vspace{.4cm}
+
+* Lot of # Trasistory States found on Drug 1
+
+::::
+
+:::
+
+
+##################################
+
+## Prediction (Classification Trees) : ROC curves (Sensitivity vs. Specificity) 
+\vspace{.4cm}
+
+```{r, echo = FALSE, include=FALSE}
+#install.packages("pROC")
+####### Drugs 0 : 0.5h and 15h 
+dt = sort(sample(nrow(df_15_d0), nrow(df_15_d0)*.8))
+df_15_d0_train<-df_15_d0[dt,]
+df_15_d0_test<-df_15_d0[-dt,]
+
+dt = sort(sample(nrow(df_0.5_d0), nrow(df_0.5_d0)*.8))
+df_0.5_d0_train<-df_0.5_d0[dt,]
+df_0.5_d0_test<-df_0.5_d0[-dt,]
+
+####### Drugs 1 : 0.5h and 15h
+dt = sort(sample(nrow(df_15_d1), nrow(df_15_d1)*.8))
+df_15_d1_train<-df_15_d1[dt,]
+df_15_d1_test<-df_15_d1[-dt,]
+
+dt = sort(sample(nrow(df_0.5_d1), nrow(df_0.5_d1)*.8))
+df_0.5_d1_train<-df_0.5_d1[dt,]
+df_0.5_d1_test<-df_0.5_d1[-dt,]
+
+```
+\tiny 
+:::::::::::::: {.columns totalwidth=\textwidth}
+
+:::: {.column width="50%"} 
+
+### NF_kappaB 
+```{r someVar, echo=FALSE,results='hide',message=FALSE,fig.width=5, fig.height=5}
+
+theme_update(# axis labels
+             axis.title = element_text(size = 3),
+             # tick labels
+             axis.text = element_text(size = 3),
+             # title 
+             title = element_text(size = 5))
+
+
+tree0.5_NF_kappaB <- rpart( NF_kappaB ~ MiTFg_Condition + Sox10_Condition + NGFR_Condition + AXL_Condition,cp = 0.001, data=df_0.5_d0_train)
+
+
+tree0.5.preds_NF_kappaB <- predict(tree0.5_NF_kappaB, df_0.5_d0_test)
+
+roc(df_0.5_d0_test$MiTFg_Condition, tree0.5.preds_NF_kappaB, plot=TRUE, print.auc=TRUE,percent =TRUE, col = "#19bbe3", lwd=4 )
+plot.roc(df_0.5_d0_test$NGFR_Condition, tree0.5.preds_NF_kappaB, print.auc =TRUE, add = TRUE,percent =TRUE, col = "#d919e3", print.auc.y = 43,lwd=4)
+plot.roc(df_0.5_d0_test$Sox10_Condition, tree0.5.preds_NF_kappaB, print.auc =TRUE, add = TRUE,percent =TRUE, col = "#e3194c", print.auc.y = 36,lwd=4)
+plot.roc(df_0.5_d0_test$AXL_Condition, tree0.5.preds_NF_kappaB, print.auc =TRUE, add = TRUE,percent =TRUE, col = "#45e319", print.auc.y =29,lwd=4)
+
+legend("bottomright", legend=c("MiTFg", "NGFR", "Sox10", "AXL"),col = c("#19bbe3","#d919e3","#e3194c", "#45e319"), lwd = 4)
+
+
+
+```
+
+:::: 
+
+:::: {.column width="50%"}
+
+### Phospho_p38
+```{r someVari, echo=FALSE,results='hide',message=FALSE,fig.width=5, fig.height=5}
+
+theme_update(# axis labels
+             axis.title = element_text(size = 3),
+             # tick labels
+             axis.text = element_text(size = 3),
+             # title 
+             title = element_text(size = 5))
+
+
+
+tree0.5_Phospho_p38 <- rpart( Phospho_p38 ~ MiTFg_Condition + Sox10_Condition + NGFR_Condition + AXL_Condition,cp = 0.001, data=df_0.5_d0_train)
+
+
+tree0.5.preds_Phospho_p38 <- predict(tree0.5_Phospho_p38 , df_0.5_d0_test)
+
+roc(df_0.5_d0_test$MiTFg_Condition, tree0.5.preds_Phospho_p38 , plot=TRUE, print.auc=TRUE,percent =TRUE, col = "#19bbe3", lwd=5 )
+plot.roc(df_0.5_d0_test$NGFR_Condition, tree0.5.preds_Phospho_p38 , print.auc =TRUE, add = TRUE,percent =TRUE, col = "#d919e3", print.auc.y = 43,lwd=5)
+plot.roc(df_0.5_d0_test$Sox10_Condition, tree0.5.preds_Phospho_p38 , print.auc =TRUE, add = TRUE,percent =TRUE, col = "#e3194c", print.auc.y = 36,lwd=5)
+plot.roc(df_0.5_d0_test$AXL_Condition, tree0.5.preds_Phospho_p38 , print.auc =TRUE, add = TRUE,percent =TRUE, col = "#45e319", print.auc.y =29,lwd=5)
+
+legend("bottomright", legend=c("MiTFg", "NGFR", "Sox10", "AXL"),col = c("#19bbe3","#d919e3","#e3194c", "#45e319"), lwd = 5)
+
+
+
+```
+
+::::
+
+
+::::::::::::::
+
+
+##################################
+
+## Two Hypothesis Teting 
+
+\large
+
+### Questions: 
+
+\vspace{.2cm}
+* Do protein levels in experimental condition 'X' change over time 't'?
+
+### Methods: 
+
+\vspace{.5cm}
+1.
+
+
+##################################
+
+## Results and Prediction (Two Hypothesis Testing)
+
+\large
+
+### Results
+*Talk about the results
+*
+
+##################################
+
+## Linear Regressions 
+
+\large
+
+### Questions: 
+
+\vspace{.2cm}
+* Can we predict cellular phenotypic outcomes 'Y' values from transcription factors (TF)?
+
+### Methods: 
+
+\vspace{.5cm}
+1.
+
+##################################
+
+## Results and Prediction (Linear Regressions)
+
+\large
+
+### Results
+*Talk about the results
+*
+
+
+
+##################################
+
+## Overall Prediction and Results
+
+### Prediction
+1.
+2.
+3.
+
+### Results
+*
+*
+*
+
+
+##################################
+
+## Limitation
+*
+*
+*
+*
+*
+
+##################################
+
+## Conclusion with Future Perspective
+
+### Conclusions
+*
+*
+*
+
+### How this results will help?
+1.
+2.
+3.
+
+
+##################################
+
+## Reference
+
+[1] AP-1 transcription factor network explains diverse patterns of cellular plasticity in melanoma
+Natacha Comandante-Lou, Douglas G. Baumann, Mohammad Fallahi-Sichani
+bioRxiv 2021.12.06.471514; doi: https://doi.org/10.1101/2021.12.06.471514
+
+
+
+
+
+
+
+
+

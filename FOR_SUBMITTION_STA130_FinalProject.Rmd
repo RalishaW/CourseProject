@@ -35,7 +35,6 @@ library(pROC)
 library("stats")
 library("datasets")
 library(caret)
-library(InformationValue)
 library(ISLR)
 
 ```
@@ -69,11 +68,11 @@ library(ISLR)
 
 \vspace{.2cm}
 
-2.Can we predict cellular phenotype outcomes 'Y' values from transcription factors (TF)? -> Linear Regression
+2.Can we predict cellular phenotypic outcomes 'Y' values from transcription factors (TF)? -> Linear Regression
 
 \vspace{.2cm}
 
-3.At time 't' in experimental condition, what TF are most predictive of cellular values/states ? -> Classification Trees 
+3.Can we predict and compare the efficacy of the drugs over time? -> Classification trees 
 
 ##################################
 
@@ -152,10 +151,10 @@ library(knitr)
 kable(df_tidy[1:5, 24:30 ], caption = "Data Wrangling")
 ```
 \normalsize
-* Total Observations: 540792 (exclude NA's) 
+* Total Observations: 540792 
 * Time point (exclude any characters)
-* Doses [exclude any unit ('uM' and '+' sign)] 
-* Change the name of drugs to 0 and 1. 0 for 'Vem' and 1 for 'Vem + Tram' 
+* Doses [exclude any unit ('uM' and '+' sign)]
+* Exclude NA's 
 
 
 ##################################
@@ -194,6 +193,177 @@ corrplot(Corr,order="hclust", method="color")
 
 
 
+##################################
+
+## Two Hypothesis Teting 
+
+\large
+
+### Questions: 
+
+\vspace{.2cm}
+* Do protein levels in experimental condition 'X' change over time 't'?
+
+### Experimental condition: 
+
+\vspace{.2cm}
+* Drug 0 at 0.5h
+
+Melanocytic
+•NF_kappaB
+•Phospho_p38
+
+Drug 1 at 0.5h
+
+Melanocytic
+•Phospho_Fra1
+•NF_kappaB
+
+Transistory
+•Phospho_p38
+
+
+##################################
+## Process (Two Hypothesis Teting)
+
+\large
+
+### Methods:
+
+\vspace{.2cm}
+*Categorize the 4 genes as high or low.
+*Identify the Cellular Phenotype using given information of genes.
+*Calculate the test static: the mean difference between two time periods.
+*Perform the two sample hypothesis test.
+
+### Hypothesis:
+
+\vspace{.2cm}
+* $$H_{0} : M_{0.5} = M_{15} VS H_{A} : M_{0.5} != M_{15}$$
+*significance value alpha=0.01
+
+##################################
+``` {r setup, include = FALSE}
+q1data <- df_tidy
+q1data <- q1data %>% mutate(MiTFg_Condition = case_when(MiTFg >= median(MiTFg,na.rm = FALSE) ~ "High", MiTFg < median(MiTFg, na.rm = FALSE) ~ "Low"))
+q1data <- q1data %>% mutate(Sox10_Condition = case_when(Sox10 >= median(Sox10,na.rm = FALSE) ~ "High", Sox10 < median(Sox10, na.rm = FALSE) ~ "Low"))
+q1data <- q1data %>% mutate(NGFR_Condition = case_when(NGFR >= median(NGFR,na.rm = FALSE) ~ "High", NGFR < median(NGFR, na.rm = FALSE) ~ "Low"))
+q1data <- q1data %>% mutate(AXL_Condition = case_when(AXL >= median(AXL,na.rm = FALSE) ~ "High", AXL < median(AXL, na.rm = FALSE) ~ "Low"))
+q1data <- q1data %>% filter(Timepoint == 0.5 | Timepoint == 15) 
+q1data <- q1data %>% mutate(TimeID = case_when(Timepoint==0.5 ~ 1, Timepoint!=0.5 ~ 0))
+
+q1data1 <- q1data %>% filter(MiTFg_Condition == "High" & NGFR_Condition == "High" & Sox10_Condition == "Low" & AXL_Condition == "Low") %>% filter(Drugs==0)
+
+
+test_stat1 <- q1data1 %>% group_by(TimeID) %>% summarise(medians1 = median(NF_kappaB),.groups = "drop") %>% summarise(value = diff(medians1))
+
+set.seed(188)
+repetitions <-1000;
+simulated_values1 <- rep(NA, repetitions)
+for (i in 1:repetitions) {
+  simdata1 <- q1data1 %>% mutate(TimeID = sample(TimeID))
+  simvalue1 <- simdata1 %>% group_by(TimeID) %>% summarise(medians1 = median(NF_kappaB),.groups = "drop") %>% summarise(value = diff(medians1))
+  simulated_values1[i] <- as.numeric(simvalue1)
+}
+sim1 <- tibble(median_diff1 = simulated_values1)
+extreme1 <- sim1 %>% filter(abs(median_diff1) >= abs(test_stat1)) %>% summarise(n())
+p_value1 <- as.numeric(extreme1/repetitions)
+p_value1
+
+test_stat2 <- q1data1 %>% group_by(TimeID) %>% summarise(medians2 = median(Phospho_p38),.groups = "drop") %>% summarise(value = diff(medians2))
+
+simulated_values2 <- rep(NA, repetitions)
+for (i in 1:repetitions) {
+  simdata2 <- q1data1 %>% mutate(TimeID = sample(TimeID))
+  simvalue2 <- simdata2 %>% group_by(TimeID) %>% summarise(medians2 = median(Phospho_p38),.groups = "drop") %>% summarise(value = diff(medians2))
+  simulated_values2[i] <- as.numeric(simvalue2)
+}
+sim2 <- tibble(median_diff2 = simulated_values2)
+extreme2 <- sim2 %>% filter(abs(median_diff2) >= abs(test_stat2)) %>% summarise(n())
+p_value2 <- as.numeric(extreme2/repetitions)
+p_value2
+
+q1data2 <- q1data %>% filter(MiTFg_Condition == "High" & NGFR_Condition == "High" & Sox10_Condition == "Low" & AXL_Condition == "Low") %>% filter(Drugs==1)
+
+test_stat3 <- q1data2 %>% group_by(TimeID) %>% summarise(medians3 = median(Phospho_Fra1),.groups = "drop") %>% summarise(value = diff(medians3))
+
+simulated_values3 <- rep(NA, repetitions)
+for (i in 1:repetitions) {
+  simdata3 <- q1data2 %>% mutate(TimeID = sample(TimeID))
+  simvalue3 <- simdata3 %>% group_by(TimeID) %>% summarise(medians3 = median(Phospho_Fra1),.groups = "drop") %>% summarise(value = diff(medians3))
+  simulated_values3[i] <- as.numeric(simvalue3)
+}
+sim3 <- tibble(median_diff3 = simulated_values3)
+extreme3 <- sim3 %>% filter(abs(median_diff3) >= abs(test_stat3)) %>% summarise(n())
+p_value3 <- as.numeric(extreme3/repetitions)
+p_value3
+
+test_stat4 <- q1data2 %>% group_by(TimeID) %>% summarise(medians3 = median(NF_kappaB),.groups = "drop") %>% summarise(value = diff(medians3))
+
+simulated_values4 <- rep(NA, repetitions)
+for (i in 1:repetitions) {
+  simdata4 <- q1data2 %>% mutate(TimeID = sample(TimeID))
+  simvalue4 <- simdata4 %>% group_by(TimeID) %>% summarise(medians4 = median(NF_kappaB),.groups = "drop") %>% summarise(value = diff(medians4))
+  simulated_values4[i] <- as.numeric(simvalue4)
+}
+sim4 <- tibble(median_diff4 = simulated_values4)
+extreme4 <- sim4 %>% filter(abs(median_diff4) >= abs(test_stat4)) %>% summarise(n())
+p_value4 <- as.numeric(extreme4/repetitions)
+p_value4
+
+
+q1data3 <- q1data %>% filter(MiTFg_Condition == "High" & NGFR_Condition == "High" & Sox10_Condition == "High" & AXL_Condition == "Low") %>% filter(Drugs==1)
+
+test_stat5 <- q1data3 %>% group_by(TimeID) %>% summarise(medians5 = median(NF_kappaB),.groups = "drop") %>% summarise(value = diff(medians5))
+
+simulated_values5 <- rep(NA, repetitions)
+for (i in 1:repetitions) {
+  simdata5 <- q1data3 %>% mutate(TimeID = sample(TimeID))
+  simvalue5 <- simdata5 %>% group_by(TimeID) %>% summarise(medians5 = median(NF_kappaB),.groups = "drop") %>% summarise(value = diff(medians5))
+  simulated_values5[i] <- as.numeric(simvalue5)
+}
+sim5 <- tibble(median_diff5 = simulated_values5)
+extreme5 <- sim5 %>% filter(abs(median_diff5) >= abs(test_stat5)) %>% summarise(n())
+p_value5 <- as.numeric(extreme4/repetitions)
+p_value5
+```
+
+## Results and Prediction (Two Hypothesis Testing)
+
+\large
+
+### Results
+
+\vspace{.2cm}
+*P1=0, P2=0, P3=0, P4=0, P5=0
+*When assuming the null hypothesis is true, there isn't a single simulated value that is as or more extreme than the test statistic.
+*Reject the null hypothesis.
+
+##################################
+
+## Linear Regressions 
+
+\large
+
+### Questions: 
+
+\vspace{.2cm}
+* Can we predict cellular phenotypic outcomes 'Y' values from transcription factors (TF)?
+
+### Methods: 
+
+\vspace{.5cm}
+1.
+
+##################################
+
+## Results and Prediction (Linear Regressions)
+
+\large
+
+### Results
+*Talk about the results
+*
 
 ##################################
 
@@ -204,7 +374,7 @@ corrplot(Corr,order="hclust", method="color")
 ### Questions: 
 
 \vspace{.2cm}
-* At time 't' in experimental condition, what TF are most predictive of cellular values/states ?
+* Can we predict and compare the efficacy of the drugs over time?
 
 ### Methods: 
 
@@ -244,38 +414,38 @@ df_15_d1 <- df_tidy %>% filter(df_tidy$Timepoint == 15, df_tidy$Drugs == 1)
 ################
 # ---- 0.5h ---- drug 0
 
- df_0.5_d0 <- df_0.5_d0 %>% mutate(MiTFg_Condition = case_when(MiTFg >= median(MiTFg,na.rm = FALSE) ~ "High", MiTFg < median(MiTFg, na.rm = FALSE) ~ "Low"))
- df_0.5_d0 <- df_0.5_d0 %>% mutate(Sox10_Condition = case_when(Sox10 >= median(Sox10,na.rm = FALSE) ~ "High", Sox10 < median(Sox10, na.rm = FALSE) ~ "Low"))
- df_0.5_d0 <- df_0.5_d0 %>% mutate(NGFR_Condition = case_when(NGFR >= median(NGFR,na.rm = FALSE) ~ "High", NGFR < median(NGFR, na.rm = FALSE) ~ "Low"))
- df_0.5_d0 <- df_0.5_d0 %>% mutate(AXL_Condition = case_when(AXL >= median(AXL,na.rm = FALSE) ~ "High", AXL < median(AXL, na.rm = FALSE) ~ "Low"))
+ df_0.5_d0 <- df_0.5_d0 %>% mutate(MiTFg_Condition = case_when(MiTFg < median(MiTFg,na.rm = FALSE) ~ "High", MiTFg >= median(MiTFg, na.rm = FALSE) ~ "Low"))
+ df_0.5_d0 <- df_0.5_d0 %>% mutate(Sox10_Condition = case_when(Sox10 < median(Sox10,na.rm = FALSE) ~ "High", Sox10 >= median(Sox10, na.rm = FALSE) ~ "Low"))
+ df_0.5_d0 <- df_0.5_d0 %>% mutate(NGFR_Condition = case_when(NGFR < median(NGFR,na.rm = FALSE) ~ "High", NGFR >= median(NGFR, na.rm = FALSE) ~ "Low"))
+ df_0.5_d0 <- df_0.5_d0 %>% mutate(AXL_Condition = case_when(AXL < median(AXL,na.rm = FALSE) ~ "High", AXL >= median(AXL, na.rm = FALSE) ~ "Low"))
 #
 
 ################
 # ---- 0.5h ---- drug 1
 
 #
- df_0.5_d1 <- df_0.5_d1 %>% mutate(MiTFg_Condition = case_when(MiTFg >= median(MiTFg,na.rm = FALSE) ~ "High", MiTFg < median(MiTFg, na.rm = FALSE) ~ "Low"))
- df_0.5_d1 <- df_0.5_d1 %>% mutate(Sox10_Condition = case_when(Sox10 >= median(Sox10,na.rm = FALSE) ~ "High", Sox10 < median(Sox10, na.rm = FALSE) ~ "Low"))
- df_0.5_d1 <- df_0.5_d1 %>% mutate(NGFR_Condition = case_when(NGFR >= median(NGFR,na.rm = FALSE) ~ "High", NGFR < median(NGFR, na.rm = FALSE) ~ "Low"))
- df_0.5_d1 <- df_0.5_d1 %>% mutate(AXL_Condition = case_when(AXL >= median(AXL,na.rm = FALSE) ~ "High", AXL < median(AXL, na.rm = FALSE) ~ "Low"))
+ df_0.5_d1 <- df_0.5_d1 %>% mutate(MiTFg_Condition = case_when(MiTFg < median(MiTFg,na.rm = FALSE) ~ "High", MiTFg >= median(MiTFg, na.rm = FALSE) ~ "Low"))
+ df_0.5_d1 <- df_0.5_d1 %>% mutate(Sox10_Condition = case_when(Sox10 < median(Sox10,na.rm = FALSE) ~ "High", Sox10 >= median(Sox10, na.rm = FALSE) ~ "Low"))
+ df_0.5_d1 <- df_0.5_d1 %>% mutate(NGFR_Condition = case_when(NGFR < median(NGFR,na.rm = FALSE) ~ "High", NGFR >= median(NGFR, na.rm = FALSE) ~ "Low"))
+ df_0.5_d1 <- df_0.5_d1 %>% mutate(AXL_Condition = case_when(AXL < median(AXL,na.rm = FALSE) ~ "High", AXL >= median(AXL, na.rm = FALSE) ~ "Low"))
 
 ################
 # ---- 15h ---- drug 0
 
- df_15_d0 <- df_15_d0 %>% mutate(MiTFg_Condition = case_when(MiTFg >= median(MiTFg,na.rm = FALSE) ~ "High", MiTFg < median(MiTFg, na.rm = FALSE) ~ "Low"))
- df_15_d0 <- df_15_d0 %>% mutate(Sox10_Condition = case_when(Sox10 >= median(Sox10,na.rm = FALSE) ~ "High", Sox10 < median(Sox10, na.rm = FALSE) ~ "Low"))
- df_15_d0 <- df_15_d0 %>% mutate(NGFR_Condition = case_when(NGFR >= median(NGFR,na.rm = FALSE) ~ "High", NGFR < median(NGFR, na.rm = FALSE) ~ "Low"))
- df_15_d0 <- df_15_d0 %>% mutate(AXL_Condition = case_when(AXL >= median(AXL,na.rm = FALSE) ~ "High", AXL < median(AXL, na.rm = FALSE) ~ "Low"))
+ df_15_d0 <- df_15_d0 %>% mutate(MiTFg_Condition = case_when(MiTFg < median(MiTFg,na.rm = FALSE) ~ "High", MiTFg >= median(MiTFg, na.rm = FALSE) ~ "Low"))
+ df_15_d0 <- df_15_d0 %>% mutate(Sox10_Condition = case_when(Sox10 < median(Sox10,na.rm = FALSE) ~ "High", Sox10 >= median(Sox10, na.rm = FALSE) ~ "Low"))
+ df_15_d0 <- df_15_d0 %>% mutate(NGFR_Condition = case_when(NGFR < median(NGFR,na.rm = FALSE) ~ "High", NGFR >= median(NGFR, na.rm = FALSE) ~ "Low"))
+ df_15_d0 <- df_15_d0 %>% mutate(AXL_Condition = case_when(AXL < median(AXL,na.rm = FALSE) ~ "High", AXL >= median(AXL, na.rm = FALSE) ~ "Low"))
 #
 
 ################
 # ---- 15h ---- drug 1
 
 #
- df_15_d1 <- df_15_d1 %>% mutate(MiTFg_Condition = case_when(MiTFg >= median(MiTFg,na.rm = FALSE) ~ "High", MiTFg < median(MiTFg, na.rm = FALSE) ~ "Low"))
- df_15_d1 <- df_15_d1 %>% mutate(Sox10_Condition = case_when(Sox10 >= median(Sox10,na.rm = FALSE) ~ "High", Sox10 < median(Sox10, na.rm = FALSE) ~ "Low"))
- df_15_d1 <- df_15_d1 %>% mutate(NGFR_Condition = case_when(NGFR >= median(NGFR,na.rm = FALSE) ~ "High", NGFR < median(NGFR, na.rm = FALSE) ~ "Low"))
- df_15_d1 <- df_15_d1 %>% mutate(AXL_Condition = case_when(AXL >= median(AXL,na.rm = FALSE) ~ "High", AXL < median(AXL, na.rm = FALSE) ~ "Low"))
+ df_15_d1 <- df_15_d1 %>% mutate(MiTFg_Condition = case_when(MiTFg < median(MiTFg,na.rm = FALSE) ~ "High", MiTFg >= median(MiTFg, na.rm = FALSE) ~ "Low"))
+ df_15_d1 <- df_15_d1 %>% mutate(Sox10_Condition = case_when(Sox10 < median(Sox10,na.rm = FALSE) ~ "High", Sox10 >= median(Sox10, na.rm = FALSE) ~ "Low"))
+ df_15_d1 <- df_15_d1 %>% mutate(NGFR_Condition = case_when(NGFR < median(NGFR,na.rm = FALSE) ~ "High", NGFR >= median(NGFR, na.rm = FALSE) ~ "Low"))
+ df_15_d1 <- df_15_d1 %>% mutate(AXL_Condition = case_when(AXL < median(AXL,na.rm = FALSE) ~ "High", AXL >= median(AXL, na.rm = FALSE) ~ "Low"))
 
 ```
 
@@ -293,10 +463,9 @@ plotcp(example0)
 ::::
 
 :::
-
 ##################################
 
-## Classification Trees example : Phospho_p38
+## Classification Trees example
 
 ```{r, echo=FALSE,fig.align='center'}
 
@@ -313,54 +482,53 @@ plot(as.party(example0), type="simple", gp=gpar(cex=0.4))
 
 ::: columns 
 
-:::: {.column width="70%"} 
+:::: column
 
 \vspace{.4cm}
 *
-Time point = 0.5h
-Drug = 0
+Timepoint=0.5h
+Drugs=0
 
-|AP-1| Error|Condition|#Observations|
-|-----|--------|-------|-------|
-|Phospho_ATF2|26.3|Undifferentiated|2140|
-|Phospho_p38|6.9|Melanocytic|718|
-|NF_kappaB|5.7|Melanocytic|718|
+|AP-1| Error|Condition|
+|-----|--------|-------|
+|Phospho_ATF2|8.9|Melanocytic|
+|Phospho_p38|6.6|Melanocytic|
 
-\vspace{.4cm}
+\vspace{1.3cm}
 *
-Time point = 0.5h
-Drug = 1
+Timepoint=0.5h
+Drugs=1
 
-|AP-1| Error|Condition|#Observations|
-|-----|--------|-------|-------|
-|Phospho_ATF2|17.2|Neural crest-like|1340|
-|Phospho_p38|19.5|Transitory|2065|
-|Phospho_Fra1|24.7|Melanocytic|793|
-|NF_kappaB|7.4|Melanocytic|793|
+|AP-1| Error|Condition|
+|-----|--------|-------|
+|Phospho_ATF2|9.4|Melanocytic|
 
 
 ::::
 
-:::: {.column width="30%"} 
-
-\vspace{1.0cm}
-
-### What the results tell us: 
-
-\normalsize
+:::: column
 
 \vspace{.4cm}
+*
+Timepoint=15h
+Drugs=0
 
-* Initial Condition for each Drug
+|AP-1| Error|Condition|
+|-----|--------|-------|
+|Phospho_ATF2|NA|NA|
+|Phospho_p38|NA|NA|
+|Phospho_Fra1|101.6|Melanocytic|
+|ATF2|31.9|Neural crest-like|
 
 \vspace{.4cm}
+*
+Timepoint=15h
+Drugs=1
 
-* High accuracy becomes Melanocytic States
-
-\vspace{.4cm}
-
-* Lot of # Trasistory States found on Drug 1
-
+|AP-1| Error|Condition|
+|-----|--------|-------|
+|Phospho_ATF2|NA|NA|
+|c_Fos|25.6|Melanocytic|
 ::::
 
 :::
@@ -368,7 +536,7 @@ Drug = 1
 
 ##################################
 
-## Prediction (Classification Trees) : ROC curves (Sensitivity vs. Specificity) 
+## Prediction (Classification Trees) Drugs 0 of Phospho_ATF2: 0.5h vs 15h 
 \vspace{.4cm}
 
 ```{r, echo = FALSE, include=FALSE}
@@ -395,126 +563,100 @@ df_0.5_d1_test<-df_0.5_d1[-dt,]
 \tiny 
 :::::::::::::: {.columns totalwidth=\textwidth}
 
-:::: {.column width="50%"} 
-
-### NF_kappaB 
-```{r someVar, echo=FALSE,results='hide',message=FALSE,fig.width=5, fig.height=5}
-
-theme_update(# axis labels
-             axis.title = element_text(size = 3),
-             # tick labels
-             axis.text = element_text(size = 3),
-             # title 
-             title = element_text(size = 5))
+:::: {.column width="25%"} 
+```{r, echo=FALSE, include = FALSE}
+#tree0.5 <- rpart( Phospho_ATF2 ~ MiTFg_Condition + Sox10_Condition + NGFR_Condition + AXL_Condition,cp = 0.001, data=df_0.5_d0_train)
 
 
-tree0.5_NF_kappaB <- rpart( NF_kappaB ~ MiTFg_Condition + Sox10_Condition + NGFR_Condition + AXL_Condition,cp = 0.001, data=df_0.5_d0_train)
+#tree0.5.preds <- predict(tree0.5, df_0.5_d0_test)
+#tree0.5.roc <- roc(df_0.5_d0_test$MiTFg_Condition, tree0.5.preds)
+#tree0.5.roc <- roc(df_0.5_d0_test$NGFR_Condition, tree0.5.preds)
+#tree0.5.roc <- roc(df_0.5_d0_test$Sox10_Condition, tree0.5.preds)
+#tree0.5.roc <- roc(df_0.5_d0_test$AXL_Condition, tree0.5.preds)
+
+#print(tree0.5.roc)
+#plot(tree0.5.roc)
+```
+\tiny 
+
+![](/Users/yamaguchiumi/Desktop/ForSubmission_FinalProject_slides - STA130/0.5h_Phospho_ATF2/0.5_Phospho_ATF2_MiTFg_0.7043.png){width=70px}
+
+* AUC = 0.7043 : MiTFg
+
+![](/Users/yamaguchiumi/Desktop/ForSubmission_FinalProject_slides - STA130/0.5h_Phospho_ATF2/0.5_Phospho_ATF2_NGFR_1.png){width=70px}
+
+* AUC = 1 : NGFR
+
+![](/Users/yamaguchiumi/Desktop/ForSubmission_FinalProject_slides - STA130/0.5h_Phospho_ATF2/0.5_Phospho_ATF2_Sox10_0.6819.png){width=70px}
+
+* AUC = 0.6819 : Sox10
+ 
+![](/Users/yamaguchiumi/Desktop/ForSubmission_FinalProject_slides - STA130/0.5h_Phospho_ATF2/0.5_Phospho_ATF2_AXL_0.8611.png){width=70px}
+
+* AUC = 0.8611 : AXL 
 
 
-tree0.5.preds_NF_kappaB <- predict(tree0.5_NF_kappaB, df_0.5_d0_test)
+```{r, include=FALSE}
+#tree15 <- rpart( Phospho_ATF2 ~ MiTFg_Condition + Sox10_Condition + NGFR_Condition + AXL_Condition,cp = 0.001, data=df_15_d0_train)
 
-roc(df_0.5_d0_test$MiTFg_Condition, tree0.5.preds_NF_kappaB, plot=TRUE, print.auc=TRUE,percent =TRUE, col = "#19bbe3", lwd=4 )
-plot.roc(df_0.5_d0_test$NGFR_Condition, tree0.5.preds_NF_kappaB, print.auc =TRUE, add = TRUE,percent =TRUE, col = "#d919e3", print.auc.y = 43,lwd=4)
-plot.roc(df_0.5_d0_test$Sox10_Condition, tree0.5.preds_NF_kappaB, print.auc =TRUE, add = TRUE,percent =TRUE, col = "#e3194c", print.auc.y = 36,lwd=4)
-plot.roc(df_0.5_d0_test$AXL_Condition, tree0.5.preds_NF_kappaB, print.auc =TRUE, add = TRUE,percent =TRUE, col = "#45e319", print.auc.y =29,lwd=4)
 
-legend("bottomright", legend=c("MiTFg", "NGFR", "Sox10", "AXL"),col = c("#19bbe3","#d919e3","#e3194c", "#45e319"), lwd = 4)
+#tree15.preds <- predict(tree15, df_15_d0_test)
+#tree15.roc <- roc(df_15_d0_test$MiTFg_Condition, tree15.preds)
+#tree15.roc <- roc(df_15_d0_test$NGFR_Condition, tree15.preds)
+#tree15.roc <- roc(df_15_d0_test$Sox10_Condition, tree15.preds)
+#tree15.roc <- roc(df_15_d0_test$AXL_Condition, tree15.preds)
+
+#print(tree15.roc)
+#plot(tree15.roc)
 
 
 
 ```
-
 :::: 
 
+:::: {.column width="25%"}
+\tiny 
+
+
+![](/Users/yamaguchiumi/Desktop/ForSubmission_FinalProject_slides - STA130/15h_Phospho_ATF2/15_Phospho_ATF2_MiTFg_0.6038.png){width=70px}
+
+* AUC = 0.6038 : MiTFg
+
+![](/Users/yamaguchiumi/Desktop/ForSubmission_FinalProject_slides - STA130/15h_Phospho_ATF2/15_Phospho_ATF2_NGFR_1.png){width=70px}
+
+* AUC = 1 : NGFR
+
+![](/Users/yamaguchiumi/Desktop/ForSubmission_FinalProject_slides - STA130/15h_Phospho_ATF2/15_Phospho_ATF2_Sox10_0.5673.png){width=70px}
+
+* AUC = 0.5673 : Sox10
+
+![](/Users/yamaguchiumi/Desktop/ForSubmission_FinalProject_slides - STA130/15h_Phospho_ATF2/15_Phospho_ATF2_AXL_0.8346.png){width=70px}
+
+* AUC = 0.8346 : AXL
+
+::::
+
 :::: {.column width="50%"}
+\normalsize
 
-### Phospho_p38
-```{r someVari, echo=FALSE,results='hide',message=FALSE,fig.width=5, fig.height=5}
+### Own Thoughts
+\vspace{.4cm}
+* Some of the AUC rate in lower by overtime (MiTFg and Sox10)
 
-theme_update(# axis labels
-             axis.title = element_text(size = 3),
-             # tick labels
-             axis.text = element_text(size = 3),
-             # title 
-             title = element_text(size = 5))
+\vspace{.4cm}
+* There may be some relationship between the AUC with the effectiveness of drugs 
 
+\vspace{.4cm}
+* Drug 0 mainly affects on indicator MiTFg and Sox10 
 
+\vspace{.4cm}
+* AXL indicators slightly affected by the Drug 0 
 
-tree0.5_Phospho_p38 <- rpart( Phospho_p38 ~ MiTFg_Condition + Sox10_Condition + NGFR_Condition + AXL_Condition,cp = 0.001, data=df_0.5_d0_train)
-
-
-tree0.5.preds_Phospho_p38 <- predict(tree0.5_Phospho_p38 , df_0.5_d0_test)
-
-roc(df_0.5_d0_test$MiTFg_Condition, tree0.5.preds_Phospho_p38 , plot=TRUE, print.auc=TRUE,percent =TRUE, col = "#19bbe3", lwd=5 )
-plot.roc(df_0.5_d0_test$NGFR_Condition, tree0.5.preds_Phospho_p38 , print.auc =TRUE, add = TRUE,percent =TRUE, col = "#d919e3", print.auc.y = 43,lwd=5)
-plot.roc(df_0.5_d0_test$Sox10_Condition, tree0.5.preds_Phospho_p38 , print.auc =TRUE, add = TRUE,percent =TRUE, col = "#e3194c", print.auc.y = 36,lwd=5)
-plot.roc(df_0.5_d0_test$AXL_Condition, tree0.5.preds_Phospho_p38 , print.auc =TRUE, add = TRUE,percent =TRUE, col = "#45e319", print.auc.y =29,lwd=5)
-
-legend("bottomright", legend=c("MiTFg", "NGFR", "Sox10", "AXL"),col = c("#19bbe3","#d919e3","#e3194c", "#45e319"), lwd = 5)
-
-
-
-```
 
 ::::
 
 
 ::::::::::::::
-
-
-##################################
-
-## Two Hypothesis Teting 
-
-\large
-
-### Questions: 
-
-\vspace{.2cm}
-* Do protein levels in experimental condition 'X' change over time 't'?
-
-### Methods: 
-
-\vspace{.5cm}
-1.
-
-
-##################################
-
-## Results and Prediction (Two Hypothesis Testing)
-
-\large
-
-### Results
-*Talk about the results
-*
-
-##################################
-
-## Linear Regressions 
-
-\large
-
-### Questions: 
-
-\vspace{.2cm}
-* Can we predict cellular phenotypic outcomes 'Y' values from transcription factors (TF)?
-
-### Methods: 
-
-\vspace{.5cm}
-1.
-
-##################################
-
-## Results and Prediction (Linear Regressions)
-
-\large
-
-### Results
-*Talk about the results
-*
-
 
 
 ##################################
@@ -535,9 +677,9 @@ legend("bottomright", legend=c("MiTFg", "NGFR", "Sox10", "AXL"),col = c("#19bbe3
 ##################################
 
 ## Limitation
-*
-*
-*
+*Bias and overfitting
+*Type I and type II error
+*Confounding variables
 *
 *
 

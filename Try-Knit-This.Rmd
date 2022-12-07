@@ -565,13 +565,13 @@ legend("bottomright", legend=c("MiTFg", "NGFR", "Sox10", "AXL"),col = c("#19bbe3
 ### Experimental condition: 
 
 \vspace{.2cm}
-* Drug 0 at 0.5h
+* Drug Vem at 0.5h
 
 Melanocytic
 * NF_kappaB
 * Phospho_p38
 
-Drug 1 at 0.5h
+Drug Vem + Tram at 0.5h
 
 Melanocytic
 * Phospho_Fra1

@@ -1,13 +1,13 @@
 ---
-title: "Data-driven identification of transcription factor networks \\linebreak overtime
+title: "Data-driven identification of transcription factor networks \\linebreak over time
   in indicating a shifted cellular homeostasis"
 author: "Umi Yamaguchi, Ralisha Woodhouse, Yifei Hong"
 date: "December 8, 2022"
 output:
   beamer_presentation:
     keep_tex: yes
-    theme: Singapore
-    colortheme: dolphin
+    theme: Rochester
+    colortheme: seahorse
     fonttheme: professionalfonts
     slide_level: 2
   slidy_presentation: default
@@ -19,7 +19,8 @@ urlcolor: cyan
 ---
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+#knitr::opts_chunk$set(echo = TRUE)
+#install.packages('tinytex')
 library(tidyverse)
 library(dplyr)
 library(magrittr)
@@ -41,11 +42,11 @@ library(ggpubr)
 
 ## Introduction
 
-\Large 
+\normalsize 
 
 ### Goals And Motivation 
 
-\vspace{.5cm}
+\vspace{.1cm}
 
 * Decrease or reduce the growth and expansion of malignant cells 
 
@@ -62,17 +63,17 @@ library(ggpubr)
 
 \normalsize 
 
-\vspace{.5cm}
+\vspace{.1cm}
 
-1.Do protein levels in experimental condition 'X' change over time 't'? -> Two Sample Hypothesis Testing
+1) Can we predict cellular phenotype outcomes 'Y' values from transcription factors (TF)? → Linear Regression
 
-\vspace{.2cm}
+\vspace{.1cm}
 
-2.Can we predict cellular phenotype outcomes 'Y' values from transcription factors (TF)? -> Linear Regression
+2) At time 't' in experimental condition, what TF are most predictive of cellular values/states? → Classification Trees
 
-\vspace{.2cm}
+\vspace{.1cm}
 
-3.At time 't' in experimental condition, what TF are most predictive of cellular values/states ? -> Classification Trees 
+3) Do protein levels in experimental condition 'X' change over time 't'? → Two Sample Hypothesis Testing
 
 ##################################
 
@@ -154,29 +155,30 @@ kable(df_tidy[1:5, 24:30 ], caption = "Data Wrangling")
 
 ##################################
 
-## Initial Data Analysis (Correlation Matrix)
+## Initial Data Analysis
 
 \large
-::::
+:::: columns
 
-:::: column
+::: column
 
-### What we can observe 
+* Empirically determining HIGH/LOW levels of the specific proteins that determine the phenotype of a melanoma cell:
 
-*correlation 
-*make some answers 
-*
-::::
+\normalsize
+
+|Cellular Phenotype|MiTFg|NGFR|SOX10|AXL|
+|-----|--------|-------|-------|------|
+|Undifferentiated|LOW|LOW|LOW|HIGH|
+|Neural crest-like|LOW|HIGH|HIGH|HIGH|
+|Transitory|HIGH|HIGH|HIGH|LOW|
+|Melanocytic|HIGH|LOW|LOW|LOW|
 
 :::
 
-::: columns 
+::: column
 
-:::: column 
-
-\vspace{.2cm}
-
-```{r, echo= FALSE, fig.width=15, fig.height=15, fig.align='right'}
+* Correlation Matrix (Drug 'Vem' at Timepoint 0.5 h)
+```{r, echo= FALSE, fig.width=17.5, fig.height=16, fig.align='right'}
 #Split for correlation matrix - Drug 0 Timepoint 0.5
 df_0.5_drug0 <- df_tidy %>% filter(Timepoint==0.5, Drugs==0) %>% select(-df_tidy$...1)
 
@@ -192,32 +194,37 @@ fill=Correlation,
 label=round(Correlation,2))) + geom_tile() + geom_text(color="white") + theme(axis.text.x = element_text(angle = 45, hjust=1), axis.text = element_text(size = 15), legend.key.size = unit(0.6, 'cm'), legend.title = element_text(size=13), legend.text = element_text(size=12))
 ```
 
+:::  
+
+::::  
+
 ##################################
 
-## Linear Regressions 
+## Linear Regression 
 
 \large
 
-::: columns 
+### Research Question:
+Can we predict cellular phenotype outcomes 'Y' values from transcription factors (TF)?
 
-:::: {.column width="70%"} 
+### Methods: 
 
-\vspace{.4cm}
-*
-First identified transcription factors with highest correlation to the 4 specific proteins
+\vspace{.3cm}
+\small
 
-\vspace{.4cm}
-*
-Time point = 0.5h
-Drug = 0
+1. Subset the data frame to include time point 0.5 hours and Drug Vem
 
-|| Estimate|Pr(>|t|)|MiTFg Correlation|
-|-----|--------|-------|-------|
-|(Intercept)|0.6975795|6.739649e-308|-|
-|ATF3|0.3172953 |6.333796e-193|0.6|
-|ATF4|0.2834738 |0|0.5|
-|ATF5|0.1037266 |5.193508e-37|0.56|
-|NF_kappaB|0.2203479 |2.102597e-119|0.57|
+2. Categorize the phenotypic outcomes using empirically determined HIGH/LOW distinctions of the 4 specific proteins
+
+3. Extract the transcription factor(s) that are the mostly correlated with each of the 4 specific proteins (using the correlation matrix)
+
+4. Use the linear regression method to identify the most significant transcription factor
+
+5. Plot the transcription factor against the protein, observing the effects on phenotypic outcome
+
+6. Train-test to assess accuracy of model
+
+\vspace{.2cm}
 
 ```{r, include=FALSE}
 
@@ -266,20 +273,20 @@ df_15_d1 <- df_tidy %>% filter(df_tidy$Timepoint == 15, df_tidy$Drugs == 1)
 
 ```
 
-```{r, echo=FALSE, include=TRUE}
+
+```{r,echo = FALSE, include=FALSE}
 df_0.5_d0_outcome <- df_0.5_d0 %>% mutate(phenotype = case_when(MiTFg_Condition=="Low" & Sox10_Condition=="Low" & NGFR_Condition=="Low" & AXL_Condition=="High" ~ "Undifferenciated", 
                                                                 MiTFg_Condition=="Low" & Sox10_Condition=="High" & NGFR_Condition=="High" & AXL_Condition=="High" ~ "Neural crest-like", 
                                                                 MiTFg_Condition=="High" & Sox10_Condition=="High" & NGFR_Condition=="High" & AXL_Condition=="Low" ~ "Transitory", 
                                                                 MiTFg_Condition=="High" & Sox10_Condition=="Low" & NGFR_Condition=="High" & AXL_Condition=="Low" ~ "Melanocytic")) %>% na.omit
 
-summary(lm(MiTFg ~ ATF3+ATF5+NF_kappaB+Phospho_S6, data=df_0.5_d0))$coefficients
+summary(lm(MiTFg ~ ATF3+ATF4+ATF5+NF_kappaB+Phospho_S6, data=df_0.5_d0))$coefficients
 summary(lm(NGFR ~ ATF3+ATF4+ATF5+NF_kappaB+Phospho_ATF2, data=df_0.5_d0))$coefficients
 summary(lm(Sox10 ~ ATF4+ATF5+Phospho_S6, data=df_0.5_d0))$coefficients
 summary(lm(AXL ~ Fra1+Fra2+Phospho_Fra1, data=df_0.5_d0))$coefficients
 
-#Phospho_Fra1 and Fra1 are highly correlated - 0.89 be weary of that
-
-LR_MiTFg <- ggplot(df_0.5_d0_outcome, aes(x=ATF3, y=MiTFg, color=phenotype)) +
+#Plots
+LR_MiTFg <- ggplot(df_0.5_d0_outcome, aes(x=ATF4, y=MiTFg, color=phenotype)) +
 geom_point(alpha = 0.4) + geom_smooth(method="lm", fill=NA, size = 1.2) + theme_bw() + labs(title="MiTFg")+ theme(plot.title = element_text(hjust = 0.5, face="bold"))
 
 LR_NGFR <- ggplot(df_0.5_d0_outcome, aes(x=Phospho_ATF2, y=NGFR, color=phenotype)) +
@@ -291,36 +298,61 @@ geom_point(alpha = 0.4) + geom_smooth(method="lm", fill=NA, size = 1.2) + theme_
 LR_AXL <- ggplot(df_0.5_d0_outcome, aes(x=Fra2, y=AXL, color=phenotype)) +
 geom_point(alpha = 0.4) + geom_smooth(method="lm", fill=NA, size = 1.2) + theme_bw() + labs(title="AXL")+ theme(plot.title = element_text(hjust = 0.5, face="bold"))
 
-#the reason I chose to display it like this...
-#We wanted to try and connect the transcription factors to the specific protein levels which then provide insight on the cellular phenotype or state of the melanoma cell??. From this graph, we can see ATF3 and MiTFg have a moderate linear correlation, and. The predictor variables in this case would be the phenotypes Melanocytic, Neural crest-like, Transitory, and Undifferenciated. They would compile an equation that follows:
+#Linear Regression
+LR_AXL_ex <- ggplot(df_0.5_d0_outcome, aes(x=Fra2, y=AXL)) +
+geom_point(alpha = 0.4) + geom_smooth(method="lm", fill=NA, size = 1.2) + theme_bw() + labs(title="Relationship Between AXL and Fra2")+ theme(plot.title = element_text(hjust = 0.5, face="bold"))
 
-#Using the same empirical classification of cellular phenotypes as the Classification Tree.
+summary(lm(MiTFg ~ ATF4+phenotype, data=df_0.5_d0_outcome))$coefficients
+rs_MiTFg <- summary(lm(MiTFg ~ ATF3+phenotype, data=df_0.5_d0_outcome))$r.squared
 
-summary(lm(MiTFg ~ ATF3+phenotype, data=df_0.5_d0_outcome))$coefficients
 summary(lm(NGFR ~ Phospho_ATF2+phenotype, data=df_0.5_d0_outcome))$coefficients
-summary(lm(Sox10 ~ ATF4+phenotype, data=df_0.5_d0_outcome))$coefficients
-summary(lm(AXL ~ Fra2+phenotype, data=df_0.5_d0_outcome))$coefficients
+rs_NGFR <- summary(lm(NGFR ~ Phospho_ATF2+phenotype, data=df_0.5_d0_outcome))$r.squared
 
+summary(lm(Sox10 ~ ATF4+phenotype, data=df_0.5_d0_outcome))$coefficients
+rs_Sox10 <- summary(lm(Sox10 ~ ATF4+phenotype, data=df_0.5_d0_outcome))$r.squared
+
+summary(lm(AXL ~ Fra2+phenotype, data=df_0.5_d0_outcome))$coefficients
+rs_AXL <- summary(lm(AXL ~ Fra2+phenotype, data=df_0.5_d0_outcome))$r.squared
 #Fra 2 at first glance less correlated but ends up being more statistically significant - ask group - choose TF based on pvalue or estimate?
 ```
 
-```{r, echo= FALSE, fig.width=15, fig.height=10}
-ggarrange(LR_MiTFg, LR_NGFR, LR_Sox10, LR_AXL,
-          ncol = 2, nrow = 2)
-```
-
-
 ##################################
 
-### Questions: 
+## Identifying Predictors (Linear Regressions)
 
-\vspace{.2cm}
-* Can we predict cellular phenotypic outcomes 'Y' values from transcription factors (TF)?
+\small
 
-### Methods: 
+|Term|Estimate|p-value|Correlation|
+|----|-------|-------|-------|
+|(Intercept)|0.66037444|2.657616e-104|1|
+|Fra1|0.54898424|2.247034e-269|0.62|
+|Fra2|0.27987459|0.000000e+00|0.49|
+|Phospho_Fra1|0.02822788|4.107424e-03|0.57|
 
-\vspace{.5cm}
-1.
+::: columns 
+
+:::: {.column width="70%"} 
+
+```{r, echo= FALSE, fig.width=5.5, fig.height=4, message = FALSE}
+LR_AXL_ex
+```
+
+::::
+
+:::: {.column width="30%"} 
+
+\vspace{1.0cm}
+
+### Equation: 
+
+\normalsize
+
+* Initial Condition for each Drug
+
+
+::::
+
+:::
 
 ##################################
 
@@ -328,25 +360,50 @@ ggarrange(LR_MiTFg, LR_NGFR, LR_Sox10, LR_AXL,
 
 \large
 
-### Results
-*Talk about the results
-*
+::: columns 
 
+:::: {.column width="70%"} 
 
-##################################
+```{r, echo= FALSE, fig.width=16, fig.height=10, message = FALSE}
+ggarrange(LR_MiTFg, LR_NGFR, LR_Sox10, LR_AXL,
+          ncol = 2, nrow = 2)
+# rs_MiTFg gives:
+#[1] 0.7481809
+# rs_NGFR gives:
+#[1] 0.650618
+# rs_Sox10 gives:
+#[1] 0.7141565
+# rs_AXL gives:
+#[1] 0.677858
+```
 
-## Overall Prediction and Results
+::::
 
-### Prediction
-1.
-2.
-3.
+:::: {.column width="30%"} 
 
-### Results
-*
-*
-*
+\vspace{1.0cm}
 
+### What the results tell us: 
+
+\normalsize
+
+* MiTFg:
+
+\vspace{.4cm}
+
+* NGFR
+
+\vspace{.4cm}
+
+* Sox10 
+
+\vspace{.4cm}
+
+* AXL
+
+::::
+
+:::
 
 
 ##################################
@@ -355,10 +412,10 @@ ggarrange(LR_MiTFg, LR_NGFR, LR_Sox10, LR_AXL,
 
 \large
 
-### Questions: 
+### Research Question: 
 
 \vspace{.2cm}
-* At time 't' in experimental condition, what TF are most predictive of cellular values/states ?
+* At time 't' in experimental condition, what TF are most predictive of cellular values/states?
 
 ### Methods: 
 
@@ -366,7 +423,7 @@ ggarrange(LR_MiTFg, LR_NGFR, LR_Sox10, LR_AXL,
 
 :::: column 
 \vspace{.3cm}
-\small
+\normalsize
 
 1. Separate the data frame for time point 0.5 and 15 hours 
 
@@ -381,13 +438,14 @@ ggarrange(LR_MiTFg, LR_NGFR, LR_Sox10, LR_AXL,
 \vspace{.1cm}
 
 4. Check all phenotypes of 0.5h drugs 0 and 1 to identify any condition matches 
-::::
 
-:::: column
+:::
+
+::: column
+
+\vspace{.2cm}
 
 ```{r, echo = FALSE}
-
-
 example0 <- rpart( Phospho_p38 ~ MiTFg_Condition + Sox10_Condition + NGFR_Condition + AXL_Condition, data = df_0.5_d0, cp = 0.001)
 
 plotcp(example0)
@@ -403,12 +461,11 @@ plotcp(example0)
 
 ## Classification Trees example : Phospho_p38
 
-```{r, echo=FALSE,fig.align='center', fig.width=24, fig.height=12}
+```{r, echo=FALSE,fig.align='center', fig.width=28, fig.height=14}
 
-plot(as.party(example0), type="simple", gp=gpar(cex=1))
+plot(as.party(example0), type="simple", gp=gpar(cex=1.2))
 
 ```
-
 
 ##################################
 
@@ -464,7 +521,7 @@ Drug = 1
 
 \vspace{.4cm}
 
-* Lot of # Trasistory States found on Drug 1
+* Lot of # Trasistory States found on Drug Vem + Tram 
 
 ::::
 
@@ -502,7 +559,8 @@ df_0.5_d1_test<-df_0.5_d1[-dt,]
 
 :::: {.column width="50%"} 
 
-### NF_kappaB 
+\large
+NF_kappaB 
 ```{r someVar, echo=FALSE,results='hide',message=FALSE,fig.width=5, fig.height=5}
 
 theme_update(# axis labels
@@ -533,7 +591,8 @@ legend("bottomright", legend=c("MiTFg", "NGFR", "Sox10", "AXL"),col = c("#19bbe3
 
 :::: {.column width="50%"}
 
-### Phospho_p38
+\large 
+Phospho_p38
 ```{r someVari, echo=FALSE,results='hide',message=FALSE,fig.width=5, fig.height=5}
 
 theme_update(# axis labels
@@ -573,9 +632,8 @@ legend("bottomright", legend=c("MiTFg", "NGFR", "Sox10", "AXL"),col = c("#19bbe3
 
 \large
 
-### Questions: 
+### Research Question: 
 
-\vspace{.2cm}
 * Do protein levels in experimental condition 'X' change over time 't'?
 
 ### Experimental condition: 
@@ -584,17 +642,17 @@ legend("bottomright", legend=c("MiTFg", "NGFR", "Sox10", "AXL"),col = c("#19bbe3
 * Drug 0 at 0.5h
 
 Melanocytic
-•NF_kappaB
-•Phospho_p38
+* NF_kappaB
+* Phospho_p38
 
 Drug 1 at 0.5h
 
 Melanocytic
-•Phospho_Fra1
-•NF_kappaB
+* Phospho_Fra1
+* NF_kappaB
 
-Transistory
-•Phospho_p38
+Transitory
+* Phospho_p38
 
 
 ##################################
@@ -605,19 +663,20 @@ Transistory
 ### Methods:
 
 \vspace{.2cm}
-*Categorize the 4 genes as high or low.
-*Identify the Cellular Phenotype using given information of genes.
-*Calculate the test static: the mean difference between two time periods.
-*Perform the two sample hypothesis test.
+* Categorize the 4 genes as high or low.
+* Identify the Cellular Phenotype using given information of genes.
+* Calculate the test static: the mean difference between two time periods.
+* Perform the two sample hypothesis test.
 
 ### Hypothesis:
 
 \vspace{.2cm}
-* $$H_{0} : M_{0.5} = M_{15} VS H_{A} : M_{0.5} != M_{15}$$
-*significance value alpha=0.01
+$$H_{0} : M_{0.5} = M_{15}$$
+$$H_{A} : M_{0.5} \neq M_{15}$$
+* significance value alpha=0.01
 
 ##################################
-``` {r setup, include = FALSE}
+``` {r, include = FALSE}
 q1data <- df_tidy
 q1data <- q1data %>% mutate(MiTFg_Condition = case_when(MiTFg >= median(MiTFg,na.rm = FALSE) ~ "High", MiTFg < median(MiTFg, na.rm = FALSE) ~ "Low"))
 q1data <- q1data %>% mutate(Sox10_Condition = case_when(Sox10 >= median(Sox10,na.rm = FALSE) ~ "High", Sox10 < median(Sox10, na.rm = FALSE) ~ "Low"))
@@ -685,6 +744,7 @@ sim5 <- tibble(median_diff5 = simulated_values5)
 extreme5 <- sim5 %>% filter(abs(median_diff5) >= abs(test_stat5)) %>% summarise(n())
 p_value5 <- as.numeric(extreme4/repetitions)
 p_value5
+
 ```
 
 ## Results and Prediction (Two Hypothesis Testing)
@@ -701,12 +761,7 @@ p_value5
 
 ##################################
 
-## Overall Prediction and Results
-
-### Prediction
-1.
-2.
-3.
+## Overall Results
 
 ### Results
 *
@@ -717,9 +772,9 @@ p_value5
 ##################################
 
 ## Limitation
-*Bias and overfitting
-*Type I and type II error
-*Confounding variables - multicollinearity
+* Bias and over fitting
+* Type I and type II error
+* Confounding variables - multicollinearity
 *
 *
 
@@ -745,3 +800,5 @@ p_value5
 [1] AP-1 transcription factor network explains diverse patterns of cellular plasticity in melanoma
 Natacha Comandante-Lou, Douglas G. Baumann, Mohammad Fallahi-Sichani
 bioRxiv 2021.12.06.471514; doi: https://doi.org/10.1101/2021.12.06.471514
+
+[2] Tables for the Classification Trees: https://docs.google.com/spreadsheets/d/13_1a_-0V5JHSz73iriPjz50Bo9Y6YCpHou2AdM0XbMA/edit#gid=0

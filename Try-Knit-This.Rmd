@@ -164,20 +164,17 @@ kable(df_tidy[1:5, 24:30 ], caption = "Data Wrangling")
 
 ### What we can observe 
 
-*correlation 
-*make some answers 
+* correlation 
+* make some answers 
 *
+
 :::
 
 ::: column
 
-:::  
-
-::::  
-
 \vspace{.2cm}
 
-```{r, echo= FALSE, fig.width=15, fig.height=15, fig.align='right'}
+```{r, echo= FALSE, fig.width=13, fig.height=13, fig.align='right'}
 #Split for correlation matrix - Drug 0 Timepoint 0.5
 df_0.5_drug0 <- df_tidy %>% filter(Timepoint==0.5, Drugs==0) %>% select(-df_tidy$...1)
 
@@ -193,14 +190,17 @@ fill=Correlation,
 label=round(Correlation,2))) + geom_tile() + geom_text(color="white") + theme(axis.text.x = element_text(angle = 45, hjust=1), axis.text = element_text(size = 15), legend.key.size = unit(0.6, 'cm'), legend.title = element_text(size=13), legend.text = element_text(size=12))
 ```
 
+
+:::  
+
+::::  
+
+
 ##################################
 
 ## Linear Regressions 
 
 \large
-
-#::: columns 
-#:::: {.column width="70%"} 
 
 \vspace{.4cm}
 * First identified transcription factors with highest correlation to the 4 specific proteins
@@ -565,13 +565,13 @@ legend("bottomright", legend=c("MiTFg", "NGFR", "Sox10", "AXL"),col = c("#19bbe3
 ### Experimental condition: 
 
 \vspace{.2cm}
-* Drug Vem at 0.5h
+* Drug 0 at 0.5h
 
 Melanocytic
 * NF_kappaB
 * Phospho_p38
 
-Drug Vem + Tram at 0.5h
+Drug 1 at 0.5h
 
 Melanocytic
 * Phospho_Fra1
@@ -597,7 +597,8 @@ Transistory
 ### Hypothesis:
 
 \vspace{.2cm}
-* $$H_{0} : M_{0.5} = M_{15} VS H_{A} : M_{0.5} != M_{15}$$
+$$H_{0} : M_{0.5} = M_{15}$$
+$$H_{A} : M_{0.5} \neq M_{15}$$
 * significance value alpha=0.01
 
 ##################################
@@ -686,12 +687,7 @@ p_value5
 
 ##################################
 
-## Overall Prediction and Results
-
-### Prediction
-1.
-2.
-3.
+## Overall Results
 
 ### Results
 *
@@ -702,7 +698,7 @@ p_value5
 ##################################
 
 ## Limitation
-*Bias and overfitting
+*Bias and over fitting
 *Type I and type II error
 *Confounding variables - multicollinearity
 *
@@ -730,3 +726,5 @@ p_value5
 [1] AP-1 transcription factor network explains diverse patterns of cellular plasticity in melanoma
 Natacha Comandante-Lou, Douglas G. Baumann, Mohammad Fallahi-Sichani
 bioRxiv 2021.12.06.471514; doi: https://doi.org/10.1101/2021.12.06.471514
+
+[2] Tables for the Classification Trees: https://docs.google.com/spreadsheets/d/13_1a_-0V5JHSz73iriPjz50Bo9Y6YCpHou2AdM0XbMA/edit#gid=0

@@ -467,9 +467,9 @@ plotcp(example0)
 
 ## Classification Trees example
 
-```{r, echo=FALSE,fig.align='center'}
+```{r, echo=FALSE,fig.align='center', fig.width=9, fig.height=4}
 
-plot(as.party(example0), type="simple", gp=gpar(cex=0.4))
+plot(as.party(example0), type="simple", gp=gpar(cex=0.6))
 
 ```
 

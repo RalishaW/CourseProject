@@ -448,7 +448,7 @@ Drug = 1
 
 \vspace{.4cm}
 
-* Lot of # Trasistory States found on Drug 1
+* Lot of # Trasistory States found on Drug Vem + Tram 
 
 ::::
 
@@ -597,7 +597,7 @@ Transistory
 ### Hypothesis:
 
 \vspace{.2cm}
-#* $$H_{0} : M_{0.5} = M_{15} VS H_{A} : M_{0.5} != M_{15}$$
+* $$H_{0} : M_{0.5} = M_{15} VS H_{A} : M_{0.5} != M_{15}$$
 * significance value alpha=0.01
 
 ##################################

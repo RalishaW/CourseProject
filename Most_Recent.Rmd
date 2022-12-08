@@ -644,11 +644,10 @@ legend("bottomright", legend=c("MiTFg", "NGFR", "Sox10", "AXL"),col = c("#19bbe3
 \vspace{.2cm}
 *
 Time point = 0.5h
-Drug = 0
+Drug = 0 (Vem)
 
 |AP-1|Condition|
 |-----|-------|
-|Phospho_ATF2|Undifferentiated|
 |Phospho_p38|Melanocytic|
 |NF_kappaB|Melanocytic|
 
@@ -658,11 +657,10 @@ Drug = 0
 \vspace{.2cm}
 *
 Time point = 0.5h
-Drug = 1
+Drug = 1 (Vem+Tram)
 
 |AP-1|Condition|
 |-----|-------|
-|Phospho_ATF2|Neural crest-like|
 |Phospho_p38|Transitory|
 |Phospho_Fra1|Melanocytic|
 |NF_kappaB|Melanocytic|
@@ -771,7 +769,9 @@ p_value5
 
 ### Results
 
-
+```{r, echo = FALSE}
+sim1 %>% ggplot(aes(x=median_diff1)) + geom_histogram()
+```
 \vspace{.2cm}
 
 ::: columns
@@ -791,9 +791,6 @@ p_value5
 
 :::: {.column width="60%"}
 
-\vspace{.5cm}
-
-* Assume Null Hypothesis is true
 
 \vspace{.5cm}
 

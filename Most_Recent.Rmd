@@ -809,7 +809,7 @@ p_value5
 
 :::
 
-## Prediction: Drug0: Difference between 0.5 and 15h of NF_kappaB
+## Prediction: Drug0 - Difference between 0.5 and 15h of NF_kappaB
 
 
 \large 

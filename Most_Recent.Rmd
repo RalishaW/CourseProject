@@ -648,7 +648,6 @@ Drug = 0
 
 |AP-1|Condition|
 |-----|-------|
-|Phospho_ATF2|Undifferentiated|
 |Phospho_p38|Melanocytic|
 |NF_kappaB|Melanocytic|
 

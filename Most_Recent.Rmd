@@ -770,9 +770,6 @@ p_value5
 
 ### Results
 
-
-\vspace{.2cm}
-
 ::: columns
 
 :::: {.column width="30%"}
@@ -785,32 +782,29 @@ p_value5
 |$$P_{4} = 0$$|Reject|
 |$$P_{5} = 0$$|Reject|
 
-\vspace{1.0 cm}
+
+\vspace{.2cm}
+
+* Assume Null Hypothesis is true 
+
+\vspace{.2cm}
+
+* No single value that is as or more extreme than the test statistic
+
+\vspace{.2cm}
+
+* Reject all the null hypothesis
+
 ::::
 
 
 :::: {.column width="60%"}
 
-\vspace{.5cm}
+Prediction: 
 
-* Assume Null Hypothesis is true 
+\vspace{.2cm}
 
-\vspace{.5cm}
-
-* No single value that is as or more extreme than the test statistic
-
-\vspace{.5cm}
-
-* Reject all the null hypothesis
-
-\vspace{.5cm}
-
-::::
-
-:::
-
-## Prediction: Drug0 - Difference between 0.5 and 15h of NF_kappaB
-
+Drug0 - Difference between 0.5 and 15h of NF_kappaB
 
 \large 
 
@@ -823,24 +817,30 @@ sim1 %>% ggplot(aes(x=median_diff1))+geom_histogram()+ theme(axis.text=element_t
 ```
 
 
+::::
+
+:::
+
+
 ## Overall Results
 
 ::: columns
 
-:::: {.column width="30%"}
+:::: {.column width="38%"}
 
 ### Linear regression
 
 \vspace{.5cm}
 
-*
+* Detected the Good predictor for each Phenotype Indicator
 
 \vspace{.5cm}
 
-*
-
-\vspace{.5cm}
-
+|AP-1|Good Predictor for|
+|-----|-------|
+|ATF4|MiTFg,Sox10|
+|Phospho_ATF2|NGFR|
+|Fra2|AXL|
 
 \vspace{.5cm}
 ::::
@@ -862,7 +862,7 @@ sim1 %>% ggplot(aes(x=median_diff1))+geom_histogram()+ theme(axis.text=element_t
 
 * Detected as high sensitivity and specificity 
 
-\vspace{.5cm}
+\vspace{1.0cm}
 
 ::::
 
@@ -883,7 +883,7 @@ sim1 %>% ggplot(aes(x=median_diff1))+geom_histogram()+ theme(axis.text=element_t
 
 * It may have some effect from drugs 
 
-\vspace{.5cm}
+\vspace{1.0cm}
 
 
 ::::
@@ -893,12 +893,18 @@ sim1 %>% ggplot(aes(x=median_diff1))+geom_histogram()+ theme(axis.text=element_t
 ## Limitation
 
 ### Example of limitation
+
+#### Linear Regression
+
+* Confounding variables - multicollinearity and bias 
+
+#### Classification Trees
+
 * Bias and over fitting
 
+#### Two hypothesis Testing
+
 * Type I and type II error
-
-* Confounding variables - multicollinearity
-
 
 
 ## Conclusion with Future Perspective

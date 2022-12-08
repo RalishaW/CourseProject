@@ -756,7 +756,13 @@ p_value5
 graph1
 
 \vspace{.2cm}
-*P1=0, P2=0, P3=0, P4=0, P5=0
+|experiment|p-value|
+|---------|----|
+|Melanocytic NF_kappaB drug0|0|
+|Melanocytic Phospho_p38 drug0|0|
+|Melanocytic NF_kappaB drug1|0|
+|Melanocytic Phospho_Fra1 drug1|0|
+|Transitory Phospho_p38 drug1|0|
 *When assuming the null hypothesis is true, there isn't a single simulated value that is as or more extreme than the test statistic.
 *Reject the null hypothesis.
 

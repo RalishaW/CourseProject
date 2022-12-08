@@ -523,6 +523,8 @@ Drug = 1
 
 * Lot of # Transistory States found on Drug Vem + Tram 
 
+\vspace{.5cm}
+
 ::::
 
 :::
@@ -644,10 +646,11 @@ legend("bottomright", legend=c("MiTFg", "NGFR", "Sox10", "AXL"),col = c("#19bbe3
 \vspace{.2cm}
 *
 Time point = 0.5h
-Drug = 0 (Vem)
+Drug = 0
 
 |AP-1|Condition|
 |-----|-------|
+|Phospho_ATF2|Undifferentiated|
 |Phospho_p38|Melanocytic|
 |NF_kappaB|Melanocytic|
 
@@ -657,7 +660,7 @@ Drug = 0 (Vem)
 \vspace{.2cm}
 *
 Time point = 0.5h
-Drug = 1 (Vem+Tram)
+Drug = 1
 
 |AP-1|Condition|
 |-----|-------|
@@ -670,7 +673,7 @@ Drug = 1 (Vem+Tram)
 :::
 
 
-## Process (Two Hypothesis Teting)
+## Process (Two Hypothesis Testing)
 
 \large
 
@@ -769,9 +772,7 @@ p_value5
 
 ### Results
 
-```{r, echo = FALSE}
-sim1 %>% ggplot(aes(x=median_diff1)) + geom_histogram()
-```
+
 \vspace{.2cm}
 
 ::: columns
@@ -786,11 +787,15 @@ sim1 %>% ggplot(aes(x=median_diff1)) + geom_histogram()
 |$$P_{4} = 0$$|Reject|
 |$$P_{5} = 0$$|Reject|
 
+\vspace{1.0 cm}
 ::::
 
 
 :::: {.column width="60%"}
 
+\vspace{.5cm}
+
+* Assume Null Hypothesis is true 
 
 \vspace{.5cm}
 
@@ -799,6 +804,8 @@ sim1 %>% ggplot(aes(x=median_diff1)) + geom_histogram()
 \vspace{.5cm}
 
 * Reject all the null hypothesis
+
+\vspace{.5cm}
 
 ::::
 
@@ -813,8 +820,18 @@ sim1 %>% ggplot(aes(x=median_diff1)) + geom_histogram()
 
 ### Linear regression
 
+\vspace{.5cm}
+
 *
 
+\vspace{.5cm}
+
+*
+
+\vspace{.5cm}
+
+
+\vspace{.5cm}
 ::::
 
 
@@ -824,12 +841,13 @@ sim1 %>% ggplot(aes(x=median_diff1)) + geom_histogram()
 
 \vspace{.5cm}
 
-* Identify the possibility of Cellular Phenotype
+* Identified some phenotype at 0.5 hour time point
 
-* High Sensitivity and High Specificity
+* Initial Melanocytic condition found in 2 main TF 
 
-* 
+* Detected as high sensitivity and specificity 
 
+\vspace{.5cm}
 
 ::::
 
@@ -840,15 +858,18 @@ sim1 %>% ggplot(aes(x=median_diff1)) + geom_histogram()
 
 \vspace{.5cm}
 
-* Rejecting Null Hypothesis
+* Detected that there's difference between 0.5 and 15 hours
 
 \vspace{.3cm}
 
-* Both drugs may affect to reduce cancer
+* Rejected the Null Hypothesis testing: $\alpha = 0.01$ 
 
 \vspace{.3cm}
 
-* 
+* It may have some effect from drugs 
+
+\vspace{.5cm}
+
 
 ::::
 

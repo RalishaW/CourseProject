@@ -180,7 +180,7 @@ kable(df_tidy[1:5, 24:30 ], caption = "Data Wrangling")
 ::: column
 
 \small
-Correlation Matrix for Drug 'Vem' at Timepoint 0.5 h
+**Correlation Matrix for Drug 'Vem' at Timepoint 0.5 h**
 ```{r, echo= FALSE, fig.width=15, fig.height=14, fig.align='right'}
 #Split for correlation matrix - Drug 0 Timepoint 0.5
 df_0.5_drug0 <- df_tidy %>% filter(Timepoint==0.5, Drugs==0) %>% select(-df_tidy$...1)

@@ -530,8 +530,6 @@ Drug = 1
 :::
 
 
-##################################
-
 ## Prediction (Classification Trees) : ROC curves (Sensitivity vs. Specificity) 
 \vspace{.4cm}
 
@@ -562,7 +560,7 @@ df_0.5_d1_test<-df_0.5_d1[-dt,]
 :::: {.column width="50%"} 
 
 \large
-NF_kappaB 
+NF_kappaB's ROC curves
 ```{r someVar, echo=FALSE,results='hide',message=FALSE,fig.width=5, fig.height=5}
 
 theme_update(# axis labels
@@ -594,7 +592,7 @@ legend("bottomright", legend=c("MiTFg", "NGFR", "Sox10", "AXL"),col = c("#19bbe3
 :::: {.column width="50%"}
 
 \large 
-Phospho_p38
+Phospho_p38's ROC curves
 ```{r someVari, echo=FALSE,results='hide',message=FALSE,fig.width=5, fig.height=5}
 
 theme_update(# axis labels
@@ -811,6 +809,19 @@ p_value5
 
 :::
 
+## Prediction: Drug0: Difference between 0.5 and 15h of NF_kappaB
+
+
+\large 
+
+```{r some, echo=FALSE,results='hide',message=FALSE,fig.width=9, fig.height=5}
+  
+sim1 %>% ggplot(aes(x=median_diff1))+geom_histogram()+ theme(axis.text=element_text(size=10),
+        axis.title=element_text(size=10)) + labs(
+        x ="Median Difference", y = "Counts")
+
+```
+
 
 ## Overall Results
 
@@ -843,7 +854,11 @@ p_value5
 
 * Identified some phenotype at 0.5 hour time point
 
+\vspace{.5cm}
+
 * Initial Melanocytic condition found in 2 main TF 
+
+\vspace{.5cm}
 
 * Detected as high sensitivity and specificity 
 

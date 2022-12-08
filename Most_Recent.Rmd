@@ -896,15 +896,15 @@ sim1 %>% ggplot(aes(x=median_diff1))+geom_histogram()+ theme(axis.text=element_t
 
 #### Linear Regression
 
-* Confounding variables - multicollinearity and bias 
+* Confounding variables - multicollinearity of transcription factors, bias when chosing the predictor.
 
 #### Classification Trees
 
-* Bias and over fitting
+* Overtting into that may lead to do wrong prediction, bias from a subjective observer.
 
 #### Two hypothesis Testing
 
-* Type I and type II error
+* Type I and type II error(unlikely), not providing enough information or causal relation.
 
 
 ## Conclusion with Future Perspective

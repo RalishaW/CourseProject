@@ -695,6 +695,7 @@ for (i in 1:repetitions) {
   simulated_values1[i] <- as.numeric(simvalue1)
 }
 sim1 <- tibble(median_diff1 = simulated_values1)
+graph1 <- sim1 %>% ggplot(aes(x=median_diff1))+ geom_histogram()
 extreme1 <- sim1 %>% filter(abs(median_diff1) >= abs(test_stat1)) %>% summarise(n())
 p_value1 <- as.numeric(extreme1/repetitions)
 p_value1
@@ -752,6 +753,7 @@ p_value5
 \large
 
 ### Results
+graph1
 
 \vspace{.2cm}
 *P1=0, P2=0, P3=0, P4=0, P5=0
